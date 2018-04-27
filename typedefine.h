@@ -2,6 +2,10 @@
 #define TYPEDEFINE_H
 #include "./XiAPI/xiApiPlusOcv.hpp"
 
+enum WORKSMODE{fileReplayMode,camAsquistionMode};
+
+enum CAMSTATUS{camClose,camOnAsquistion,camRecording,camStopRecord};
+
     //曝光时间
 #define MIN_EXPOSURE_TIME       100
 #define MAX_EXPOSURE_TIME       10000

@@ -5,6 +5,7 @@
 #include <QThread>
 #include <string>
 #include "./XiAPI/xiApiPlusOcv.hpp"
+#include "typedefine.h"
 
 class AcquisitionThread : public QObject
 {
@@ -27,11 +28,12 @@ private:
        //QThread m_thread;
     bool imageToStreamFile(cv::Mat image, QString filename);
     bool StreamFileToImage(QString filename, cv::Mat &image);
+    void writeConfigFile(QString filename);
     xiAPIplusCameraOcv* m_xiCam;
     bool mStart;
     QMutex mutex;
     int m_nCount;
-    bool m_bSave;
+    int m_status;
 };
 
 

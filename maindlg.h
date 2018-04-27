@@ -14,6 +14,7 @@
 #include <QSlider>
 #include <QStackedWidget>
 #include <QComboBox>
+#include <QListWidget>
 #include "playercontrols.h"
 
 namespace Ui {
@@ -30,8 +31,11 @@ public:
 
 public slots:
     void test();
-    void changeMode();
+    void changeMode(int status);
 
+    void fileList(bool checkedFlag);
+    void cameraSetting(bool checkedFlag);
+    void showImage(QPixmap* pic);
 private:
     Ui::MainDlg *ui;
     QLabel* picArea;
@@ -40,10 +44,14 @@ private:
     CameraCtlWidget* camCtrl;
     PlayerControls *controls;
 
+    QListWidget* listFileWidget;
+
     int m_camStatus;
 
     QLabel* label;
     QGridLayout *layout;
+
+    bool bRightWidgetShow;
 };
 
 #endif // MAINDLG_H

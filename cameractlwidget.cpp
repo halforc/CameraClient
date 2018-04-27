@@ -1,4 +1,4 @@
-#include "cameractlwidget.h"
+﻿#include "cameractlwidget.h"
 #include "ui_cameractlwidget.h"
 #include <QFile>
 
@@ -26,11 +26,18 @@ CameraCtlWidget::CameraCtlWidget(QWidget *parent) :
 CameraCtlWidget::~CameraCtlWidget()
 {
     qDebug() << "start destroy widget";
-    if(m_objThread)
-    {
+
+    if(m_objThread) {
+        if(m_acqThread) {
+            m_acqThread->stop();
+        }
         qDebug() << "quit";
         m_objThread->quit();
         m_objThread->wait();
+    }
+    if(m_xiCam.IsAcquisitionActive()){
+        m_xiCam.StopAcquisition();
+        m_xiCam.Close();
     }
     qDebug() << "end destroy widget";
     delete ui;
@@ -53,12 +60,30 @@ void CameraCtlWidget::startObjThread()
     //录制
     connect(this,SIGNAL(saveImage()),m_acqThread,SLOT(saveImageToFile()),Qt::DirectConnection);
     connect(this,SIGNAL(stopSaveImage()),m_acqThread,SLOT(stopSaveImageToFile()),Qt::DirectConnection);
+    connect(this,SIGNAL(setStatus(int)),m_acqThread,SLOT(getStatus(int)));
     m_objThread->start();
     qDebug()<<"ok";
 }
 
 void CameraCtlWidget::on_test_clicked()
 {
+    qDebug()<<"closeCamera";
+    if(m_objThread)
+    {
+        if(m_acqThread)
+        {
+            m_acqThread->stop();
+        }
+    }
+    if(m_xiCam.IsAcquisitionActive()){
+        m_xiCam.StopAcquisition();
+        m_xiCam.Close();
+    }
+}
+
+void CameraCtlWidget::openCamera()
+{
+    qDebug()<<"openCamera";
     m_xiCam.OpenFirst();
     m_xiCam.SetExposureTime(10000);
     m_xiCam.SetAcquisitionTimingMode(XI_ACQ_TIMING_MODE_FRAME_RATE);//设置帧率模式
@@ -74,9 +99,28 @@ void CameraCtlWidget::on_test_clicked()
     emit startObjThreadWork1();
 }
 
+void CameraCtlWidget::closeCamera()
+{
+    qDebug()<<"closeCamera";
+    if(m_objThread)
+    {
+        if(m_acqThread)
+        {
+            m_acqThread->stop();
+        }
+    }
+    if(m_xiCam.IsAcquisitionActive()){
+        m_xiCam.StopAcquisition();
+        m_xiCam.Close();
+    }
+    m_curImage.load(tr("D://test.jpg"));
+    emit sendImage(&m_curImage);
+}
+
 void CameraCtlWidget::showImage(cv::Mat &image)
 {
-    m_curImage = image;
+    m_curImage = QPixmap::fromImage(Mat2QImage(image));
+    emit sendImage(&m_curImage);
 }
 
 QImage CameraCtlWidget::Mat2QImage(cv::Mat cvImg)

@@ -2,7 +2,6 @@
 #define CAMERACTLWIDGET_H
 
 #include <QWidget>
-#include "typedefine.h"
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <QPixmap>
@@ -27,6 +26,8 @@ public:
     void startObjThread();
 public slots:
     void on_test_clicked();
+    void openCamera();
+    void closeCamera();
 
     void showImage(cv::Mat& image);
 
@@ -34,6 +35,8 @@ signals:
     void startObjThreadWork1();
     void saveImage();
     void stopSaveImage();
+
+    void sendImage(QPixmap* pixmap);
 
 private:
     Ui::CameraCtlWidget *ui;
@@ -50,7 +53,7 @@ private:
 
     void readDevParaFromXML(DEVICE_SETTING *pDevInfo);
     void writeDevParaToXML(xiAPIplusCameraOcv &cam);
-    cv::Mat m_curImage;
+    QPixmap m_curImage;
 };
 
 #endif // CAMERACTLWIDGET_H

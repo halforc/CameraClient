@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
@@ -40,28 +40,36 @@
 
 #include "playercontrols.h"
 
-#include <QBoxLayout>
+
 #include <QSlider>
 #include <QStyle>
 #include <QToolButton>
 #include <QComboBox>
 #include <QDebug>
-#include <QGridLayout>
+
 #include <QLabel>
 PlayerControls::PlayerControls(QWidget *parent)
     : QWidget(parent)
+    , status(camAsquistionMode)
+    , camStatus(camClose)
     , playButton(0)
     , stopButton(0)
     , nextButton(0)
     , previousButton(0)
     , rateBox(0)
 {
-    //控制条
-    openButton = new QPushButton(tr("Open"), this);
+    //设备控制条
     comDevice = new QComboBox(this);
-    recordButton = new QPushButton(tr("record"));
-
-
+    recordButton = new QPushButton(tr("record"),this);
+  //  connect(recordButton,SIGNAL(clicked(bool)),this,SLOT(recordToFile()));
+    //设置区
+    rWightCtlButton = new QPushButton(tr("setting"),this);
+    rWightCtlButton->setCheckable(true);
+   // connect(rWightCtlButton,SIGNAL(clicked(bool)),this,SLOT(showCameraSetting()));
+    //文件控制
+    fileLabel = new QLabel("filename",this);
+    fileLabel->hide();
+    //播放控制
     playButton = new QToolButton(this);
     playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 
@@ -90,22 +98,22 @@ PlayerControls::PlayerControls(QWidget *parent)
     rateBox->setCurrentIndex(1);
     connect(rateBox, SIGNAL(activated(int)), SLOT(updateRate()));
 
+    //文件列表
+    listButton = new QPushButton(tr("list"),this);
+    listButton->setCheckable(true);
+
+    listButton->hide();
+    //功能区
     modeCahngeButton = new QPushButton(tr("Mode"),this);
-    connect(modeCahngeButton,SIGNAL(clicked(bool)),this,SLOT(modeClicked()));
+    connect(modeCahngeButton,SIGNAL(clicked(bool)),this,SLOT(changeMode()));
 
-    fullScreenButton = new QPushButton(tr("FullScreen"), this);
-    fullScreenButton->setCheckable(true);
-
-    QBoxLayout *layout = new QHBoxLayout;
+    layout = new QHBoxLayout;
     layout->setMargin(0);
-    layout->addWidget(openButton);
-    layout->setMargin(1);
     layout->addWidget(comDevice);
-    layout->setMargin(1);
-    layout->addWidget(recordButton);
     layout->addStretch(1);
 
     layout->setMargin(0);
+    layout->addWidget(recordButton);
     layout->addWidget(stopButton);
     layout->addWidget(previousButton);
     layout->addWidget(playButton);
@@ -114,24 +122,48 @@ PlayerControls::PlayerControls(QWidget *parent)
 
     layout->addStretch(1);
     layout->addWidget(modeCahngeButton);
-    layout->addWidget(fullScreenButton);
+    layout->addWidget(rWightCtlButton);
 
     setLayout(layout);
+    recordButton->setEnabled(false);
+    updateView();
 }
 
 
 void PlayerControls::playClicked()
 {
     qDebug()<<"playClicked";
-    emit play();
-//    switch (playerState) {
-//    case QMediaPlayer::StoppedState:
-//    case QMediaPlayer::PausedState:
-//        emit play();
+    if(status == camAsquistionMode){
+        switch(camStatus){
+        case camClose:
+            qDebug()<<"open camera";
+            emit openCamera();
+            camStatus = camOnAsquistion;
+            playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+            recordButton->setEnabled(true);
+            break;
+        case camOnAsquistion:
+            qDebug()<<"close camera";
+            emit closeCamera();
+            camStatus = camClose;
+            playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+            recordButton->setEnabled(false);
+        }
+    }else if(status == fileReplayMode){
+
+    }
+
+//    switch (status) {
+//    case fileReplay:
+//        emit fileReplay();
+//    case camClose:
+//        emit camOpen();
 //        break;
-//    case QMediaPlayer::PlayingState:
-//        emit pause();
+//    case 0:
+//        emit camPauseAsquistion();
 //        break;
+//    case 1:
+
 //    }
 }
 
@@ -158,13 +190,95 @@ void PlayerControls::setPlaybackRate(float rate)
 void PlayerControls::updateRate()
 {
         qDebug()<<"updateRate";
-    //    emit changeRate(playbackRate());
+        //    emit changeRate(playbackRate());
 }
 
-void PlayerControls::modeClicked()
+void PlayerControls::changeMode()
+{
+    qDebug()<<" changeMode ....."<<status;
+    if(status == camAsquistionMode){
+        status = fileReplayMode;
+    }else if(status == fileReplayMode){
+        status = camAsquistionMode;
+    }
+    updateView();
+}
+
+void PlayerControls::updateView()
 {
     qDebug()<<"changed mode";
-    emit changeMode();
+    if(status == fileReplayMode){               //回放
+        rateBox->show();
+        previousButton->setEnabled(true);
+        nextButton->setEnabled(true);
+
+        rWightCtlButton->setText(tr("list"));
+        comDevice->hide();
+        disconnect(rWightCtlButton,SIGNAL(clicked(bool)),this,SLOT(showCameraSetting()));
+        connect(rWightCtlButton,SIGNAL(clicked(bool)),this,SLOT(showFileList()));
+
+        recordButton->setText(tr("open"));
+        disconnect(recordButton,SIGNAL(clicked(bool)),this,SLOT(recordToFile()));
+        recordButton->setEnabled(true);
+        connect(recordButton,SIGNAL(clicked(bool)),this,SLOT(openReplayFile()));
+        layout->replaceWidget(comDevice,fileLabel);
+        fileLabel->show();
+    }else if(status == camAsquistionMode){          //视频采集
+        rateBox->hide();
+        previousButton->setEnabled(false);
+        nextButton->setEnabled(false);
+
+        rWightCtlButton->setText(tr("setting"));
+        fileLabel->hide();
+        disconnect(rWightCtlButton,SIGNAL(clicked(bool)),this,SLOT(showFileList()));
+        connect(rWightCtlButton,SIGNAL(clicked(bool)),this,SLOT(showCameraSetting()));
+
+        recordButton->setText(tr("record"));
+        disconnect(recordButton,SIGNAL(clicked(bool)),this,SLOT(openReplayFile()));
+        connect(recordButton,SIGNAL(clicked(bool)),this,SLOT(recordToFile()));
+        layout->replaceWidget(fileLabel,comDevice);
+        comDevice->show();
+    }
+    emit changeMode(status);
 }
+
+void PlayerControls::showFileList()
+{
+    qDebug()<<"setting check status:"<<rWightCtlButton->isChecked();
+    bool flag = rWightCtlButton->isChecked();
+    rWightCtlButton->setChecked(!flag);
+    qDebug()<<"listbutton check status:"<<rWightCtlButton->isChecked();
+    emit listFile(!flag);
+}
+
+void PlayerControls::showCameraSetting()
+{
+    qDebug()<<"setting check status:"<<rWightCtlButton->isChecked();
+    bool flag = rWightCtlButton->isChecked();
+    rWightCtlButton->setChecked(!flag);
+    qDebug()<<"setting check status:"<<rWightCtlButton->isChecked();
+    emit settingCamera(!flag);
+}
+
+void PlayerControls::recordToFile()
+{
+    qDebug()<<"record";
+    if(camStatus == camRecording){
+        emit stopRecord();
+        camStatus = camOnAsquistion;
+        recordButton->setText(tr("record"));
+    }else if(camStatus == camOnAsquistion){
+        emit startRecord();
+        camStatus = camRecording;
+        recordButton->setText(tr("stop"));
+    }
+}
+
+void PlayerControls::openReplayFile()
+{
+    qDebug()<<"open file";
+}
+
+
 
 

@@ -1,10 +1,11 @@
-#include "acquisitionthread.h"
+﻿#include "acquisitionthread.h"
 #include <QThread>
 #include <QDebug>
 #include <QMutexLocker>
 #include <fstream>
 #include <QDateTime>
 #include <QDir>
+#include <qxmlstream.h>
 AcquisitionThread::AcquisitionThread(QObject *parent)
     : QObject(parent)
 {
@@ -15,7 +16,7 @@ AcquisitionThread::AcquisitionThread(xiAPIplusCameraOcv* cam, QObject *parent)
     : QObject(parent),
       m_xiCam(cam),
       m_nCount(0),
-      m_bSave(false)
+      m_status(camClose)
 {
      // m_thread.start();
     //  this->moveToThread(&m_thread);
@@ -38,39 +39,46 @@ void AcquisitionThread::getImage()
     {
         QMutexLocker locker(&mutex);
         m_xiCam->StartAcquisition();
+        m_status = camOnAsquistion;
     }
     while(true){
-        {
-            QMutexLocker locker(&mutex);
-            if(!mStart)
-                return;
+        qDebug()<<"status"<<m_status;
+        if(m_xiCam->IsAcquisitionActive()){
+            {
+                QMutexLocker locker(&mutex);
+                if(!mStart)
+                    return;
 
-            format = m_xiCam->GetImageDataFormat();
-            cv_mat_image = m_xiCam->GetNextImageOcvMat();
-        }
-        if(m_bSave){
-            if(m_nCount == 0){
-                QDateTime local(QDateTime::currentDateTime());
-                QString localTime = local.toString("yyyyMMddhhmmss");
-                qDebug()<<localTime;
-                QDir dir;
-                if(!dir.exists(localTime))//判断需要创建的文件夹是否存在
-                {
-                    qDebug()<<"Create File Dir";
-                    dir.mkdir(localTime); //创建文件夹
-                }
-                strPath = ".//"+localTime + "//";
+                format = m_xiCam->GetImageDataFormat();
+                cv_mat_image = m_xiCam->GetNextImageOcvMat();
             }
-            strName = strPath + "image "+ QString::number(m_nCount)+".dat";
-            imageToStreamFile(cv_mat_image,strName);
-            qDebug()<<"save file "<<strName;
-            m_nCount++;
-        }else{
-            m_nCount = 0;
-        }
-            if (format == XI_RAW16 || format == XI_MONO16)
-                cv::normalize(cv_mat_image, cv_mat_image, 0, 65536, cv::NORM_MINMAX, -1, cv::Mat()); // 0 - 65536, 16 bit unsigned integer range
-            emit sendImage(cv_mat_image);
+            if(m_status == camRecording){
+                if(m_nCount == 0){
+                    QDateTime local(QDateTime::currentDateTime());
+                    QString localTime = local.toString("yyyyMMddhhmmss");
+                    qDebug()<<localTime;
+                    QDir dir;
+                    if(!dir.exists(localTime))//判断需要创建的文件夹是否存在
+                    {
+                        qDebug()<<"Create File Dir";
+                        dir.mkdir(localTime); //创建文件夹
+                    }
+                    strPath = ".//"+localTime + "//";
+                }
+                strName = strPath + "image "+ QString::number(m_nCount)+".dat";
+                imageToStreamFile(cv_mat_image,strName);
+               // qDebug()<<"save file "<<strName;
+                m_nCount++;
+            }else if(m_status == camStopRecord){
+                writeConfigFile(strPath + "configInfo.xml");
+                m_nCount = 0;
+                m_status = camOnAsquistion;
+            }else{
+                if (format == XI_RAW16 || format == XI_MONO16)
+                    cv::normalize(cv_mat_image, cv_mat_image, 0, 65536, cv::NORM_MINMAX, -1, cv::Mat()); // 0 - 65536, 16 bit unsigned integer range
+                emit sendImage(cv_mat_image);
+              }
+          }
       }
 }
 
@@ -83,13 +91,13 @@ void AcquisitionThread::test()
 void AcquisitionThread::saveImageToFile()
 {
     qDebug()<<"save";
-    m_bSave = true;
+    m_status = camRecording;
 }
 
 void AcquisitionThread::stopSaveImageToFile()
 {
     qDebug()<<"stop";
-    m_bSave = false;
+    m_status = camStopRecord;
 }
 
 bool AcquisitionThread::imageToStreamFile(cv::Mat image, QString filename)
@@ -169,4 +177,26 @@ bool AcquisitionThread::StreamFileToImage(QString filename, cv::Mat &image)
     }
     fclose(fpr);
     return true;
+}
+
+void AcquisitionThread::writeConfigFile(QString filename)
+{
+    QFile file(filename);
+    if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        qDebug()<<"open filed";
+        return;
+    }
+    QXmlStreamWriter xmlWriter(&file);
+    xmlWriter.setAutoFormatting(true);
+    xmlWriter.writeStartDocument();
+    //XiMea Cameara
+    xmlWriter.writeStartElement("XiMea Cameara USB3.0 file info");
+
+    xmlWriter.writeTextElement(tr("frame number"),QString::number(m_nCount));
+
+    xmlWriter.writeEndElement();        //相机参数
+    xmlWriter.writeEndDocument();
+
+    file.close();
 }

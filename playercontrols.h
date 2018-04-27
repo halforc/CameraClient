@@ -40,14 +40,18 @@
 
 #ifndef PLAYERCONTROLS_H
 #define PLAYERCONTROLS_H
-
+#include "typedefine.h"
 #include <QWidget>
 #include <QPushButton>
+#include <QBoxLayout>
 QT_BEGIN_NAMESPACE
 class QAbstractButton;
 class QAbstractSlider;
 class QComboBox;
+class QLabel;
 QT_END_NAMESPACE
+
+
 
 class PlayerControls : public QWidget
 {
@@ -60,31 +64,57 @@ public slots:
     void setPlaybackRate(float rate);
 
 signals:
+    //camera oper
+    void openCamera();
+    void camStopAsquistion();
+    void startRecord();
+    void stopRecord();
+    void closeCamera();
+
+    //file oper
     void play();
     void pause();
     void stop();
     void next();
     void previous();
     void changeRate(qreal rate);
-    void changeMode();
+
+    void changeMode(int status);
+    void listFile(bool checkedFlag);
+    void settingCamera(bool checkedFlag);
 private slots:
     void playClicked();
     void muteClicked();
     void updateRate();
-    void modeClicked();
 
+    void changeMode();
+
+    void showFileList();
+    void showCameraSetting();
+
+    void recordToFile();
+    void openReplayFile();
 private:
-    QPushButton *openButton;
+    QBoxLayout *layout;
+    //设备控制
     QComboBox* comDevice;
     QPushButton* recordButton;
-    QPushButton *modeCahngeButton;
-    QPushButton *fullScreenButton;
+    QPushButton* rWightCtlButton;
+    //文件播放控制
+    QLabel* fileLabel;
 
     QAbstractButton *playButton;
     QAbstractButton *stopButton;
     QAbstractButton *nextButton;
     QAbstractButton *previousButton;
     QComboBox *rateBox;
+    QPushButton* listButton;
+
+    QPushButton *modeCahngeButton;
+    WORKSMODE status;
+    CAMSTATUS camStatus;
+
+    void updateView();
 };
 
 #endif // PLAYERCONTROLS_H
