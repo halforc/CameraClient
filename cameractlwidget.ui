@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>257</width>
-    <height>489</height>
+    <width>304</width>
+    <height>504</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <rect>
      <x>0</x>
      <y>10</y>
-     <width>251</width>
+     <width>281</width>
      <height>301</height>
     </rect>
    </property>
@@ -38,12 +38,12 @@
      <string>分辨率：</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="comFrameRate">
+   <widget class="QComboBox" name="comImageDPI">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>10</y>
-      <width>69</width>
+      <x>10</x>
+      <y>40</y>
+      <width>81</width>
       <height>22</height>
      </rect>
     </property>
@@ -51,19 +51,9 @@
    <widget class="QComboBox" name="comImageType">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>10</y>
-      <width>69</width>
-      <height>22</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="comROI">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>10</y>
-      <width>51</width>
+      <x>90</x>
+      <y>40</y>
+      <width>71</width>
       <height>22</height>
      </rect>
     </property>
@@ -72,7 +62,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>40</y>
+      <y>70</y>
       <width>71</width>
       <height>16</height>
      </rect>
@@ -85,7 +75,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>70</y>
+      <y>90</y>
       <width>91</width>
       <height>23</height>
      </rect>
@@ -98,7 +88,7 @@
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>70</y>
+      <y>90</y>
       <width>91</width>
       <height>23</height>
      </rect>
@@ -237,14 +227,40 @@
      <string>最大</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="pbROI">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>40</y>
+      <width>31</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ROI</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pbDefine">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>40</y>
+      <width>51</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Define</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>320</y>
+     <x>0</x>
+     <y>310</y>
      <width>241</width>
-     <height>161</height>
+     <height>191</height>
     </rect>
    </property>
    <property name="title">
@@ -253,8 +269,8 @@
    <widget class="QPushButton" name="pbDeviceSetting">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>20</y>
+      <x>20</x>
+      <y>100</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -266,7 +282,7 @@
    <widget class="QLabel" name="lbFrameRate_3">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>20</x>
       <y>30</y>
       <width>54</width>
       <height>12</height>
@@ -276,12 +292,12 @@
      <string>触发源：</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="comtriggerSource">
+   <widget class="QComboBox" name="comTriggerSource">
     <property name="geometry">
      <rect>
       <x>70</x>
       <y>20</y>
-      <width>69</width>
+      <width>141</width>
       <height>22</height>
      </rect>
     </property>
@@ -289,8 +305,8 @@
    <widget class="QLabel" name="lbFrameRate_4">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>60</y>
+      <x>20</x>
+      <y>70</y>
       <width>54</width>
       <height>12</height>
      </rect>
@@ -303,8 +319,8 @@
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>50</y>
-      <width>69</width>
+      <y>60</y>
+      <width>141</width>
       <height>22</height>
      </rect>
     </property>
@@ -312,9 +328,9 @@
    <widget class="QPushButton" name="pbSWPing">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>50</y>
-      <width>75</width>
+      <x>140</x>
+      <y>100</y>
+      <width>71</width>
       <height>23</height>
      </rect>
     </property>
@@ -325,10 +341,10 @@
    <widget class="QLabel" name="lbFrameRate_5">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>90</y>
-      <width>101</width>
-      <height>16</height>
+      <x>20</x>
+      <y>130</y>
+      <width>81</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="text">
@@ -338,9 +354,9 @@
    <widget class="QLineEdit" name="lineEdit">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>80</y>
-      <width>113</width>
+      <x>110</x>
+      <y>130</y>
+      <width>101</width>
       <height>20</height>
      </rect>
     </property>
@@ -349,7 +365,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>130</y>
+      <y>160</y>
       <width>75</width>
       <height>23</height>
      </rect>

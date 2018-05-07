@@ -28,14 +28,18 @@ SOURCES += \
         maindlg.cpp \
     cameractlwidget.cpp \
     acquisitionthread.cpp \
-    playercontrols.cpp
+    playercontrols.cpp \
+    widget.cpp \
+    cameractrl.cpp
 
 HEADERS += \
         maindlg.h \
     cameractlwidget.h \
     acquisitionthread.h \
     typedefine.h \
-    playercontrols.h
+    playercontrols.h \
+    widget.h \
+    cameractrl.h
 
 FORMS += \
         maindlg.ui \

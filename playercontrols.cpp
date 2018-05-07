@@ -136,8 +136,8 @@ void PlayerControls::playClicked()
     if(status == camAsquistionMode){
         switch(camStatus){
         case camClose:
-            qDebug()<<"open camera";
-            emit openCamera();
+            qDebug()<<"open camera"<<comDevice->currentIndex();
+            emit openCamera(0);
             camStatus = camOnAsquistion;
             playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
             recordButton->setEnabled(true);
@@ -277,6 +277,22 @@ void PlayerControls::recordToFile()
 void PlayerControls::openReplayFile()
 {
     qDebug()<<"open file";
+}
+
+void PlayerControls::initialCameraInfo(char *camName, ulong camNumber)
+{
+    if(camNumber > 0){
+        QString str(camName);
+        for(ulong i = 0;i<camNumber;i++){
+            comDevice->addItem(str + QString::number(i+1));
+            emit openCamera(0);
+            camStatus = camOnAsquistion;
+            playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+            recordButton->setEnabled(true);
+        }
+    }else{
+        comDevice->addItem(tr("No Device connected"));
+    }
 }
 
 

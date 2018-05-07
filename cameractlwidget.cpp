@@ -1,12 +1,13 @@
 ﻿#include "cameractlwidget.h"
 #include "ui_cameractlwidget.h"
 #include <QFile>
+#include <QDebug>
 
 CameraCtlWidget::CameraCtlWidget(QWidget *parent) :
     QWidget(parent),
+    m_wndParent(parent),
     ui(new Ui::CameraCtlWidget),
-    m_acqThread(nullptr),
-    m_objThread(nullptr),
+    m_camCtrl(nullptr),
     m_bIsRecording(false)
 {
 //    //设置界面主题
@@ -21,109 +22,114 @@ CameraCtlWidget::CameraCtlWidget(QWidget *parent) :
     //固定窗口大小
     ui->setupUi(this);
     this->setFixedSize(this->size());
+    initial();
+
+    m_camCtrl = new CameraCtrl();
+    connect(m_camCtrl,SIGNAL(getCameraImage(cv::Mat&)),this,SLOT(getCameraImage(cv::Mat&)),Qt::DirectConnection);
+    connect(ui->comImageDPI,SIGNAL(currentIndexChanged(int)),this,SLOT(onComDPIChanged(int)));
+    connect(ui->comImageType,SIGNAL(currentIndexChanged(int)),this,SLOT(onComImageTypeChanged(int)));
+    connect(ui->comTriggerSelector,SIGNAL(currentIndexChanged(int)),this,SLOT(onComTriggerSelectorChanged(int)));
+    connect(ui->comTriggerSource,SIGNAL(currentIndexChanged(int)),this,SLOT(onComTriggerSourceChanged(int)));
 }
 
 CameraCtlWidget::~CameraCtlWidget()
 {
     qDebug() << "start destroy widget";
 
-    if(m_objThread) {
-        if(m_acqThread) {
-            m_acqThread->stop();
-        }
-        qDebug() << "quit";
-        m_objThread->quit();
-        m_objThread->wait();
-    }
-    if(m_xiCam.IsAcquisitionActive()){
-        m_xiCam.StopAcquisition();
-        m_xiCam.Close();
+    if(m_camCtrl != nullptr){
+        delete m_camCtrl;
+        m_camCtrl = nullptr;
     }
     qDebug() << "end destroy widget";
     delete ui;
 }
 
-void CameraCtlWidget::startObjThread()
-{
-    if(m_objThread)
-    {
-        return;
-    }
-    m_objThread= new QThread();
-    m_acqThread = new AcquisitionThread(&m_xiCam);
-    m_acqThread->moveToThread(m_objThread);
-    connect(m_objThread,&QThread::finished,m_objThread,&QObject::deleteLater);
-    connect(m_objThread,&QThread::finished,m_acqThread,&QObject::deleteLater);
-    connect(this,SIGNAL(startObjThreadWork1()),m_acqThread,SLOT(getImage()));
-    connect(m_acqThread,SIGNAL(sendImage(cv::Mat&)),this,SLOT(showImage(cv::Mat&)),Qt::DirectConnection);
 
-    //录制
-    connect(this,SIGNAL(saveImage()),m_acqThread,SLOT(saveImageToFile()),Qt::DirectConnection);
-    connect(this,SIGNAL(stopSaveImage()),m_acqThread,SLOT(stopSaveImageToFile()),Qt::DirectConnection);
-    connect(this,SIGNAL(setStatus(int)),m_acqThread,SLOT(getStatus(int)));
-    m_objThread->start();
-    qDebug()<<"ok";
-}
 
 void CameraCtlWidget::on_test_clicked()
 {
-    qDebug()<<"closeCamera";
-    if(m_objThread)
-    {
-        if(m_acqThread)
-        {
-            m_acqThread->stop();
-        }
-    }
-    if(m_xiCam.IsAcquisitionActive()){
-        m_xiCam.StopAcquisition();
-        m_xiCam.Close();
-    }
+    m_wndParent->close();
 }
 
-void CameraCtlWidget::openCamera()
+void CameraCtlWidget::openCamera(unsigned long devID)
 {
-    qDebug()<<"openCamera";
-    m_xiCam.OpenFirst();
-    m_xiCam.SetExposureTime(10000);
-    m_xiCam.SetAcquisitionTimingMode(XI_ACQ_TIMING_MODE_FRAME_RATE);//设置帧率模式
-    m_xiCam.SetWidth(800);
-    m_xiCam.SetHeight(600);
-    m_xiCam.SetFrameRate(60.0f);
+    m_camCtrl->openCamera(devID);
 
-    //开启采集线程
-    if(!m_objThread)
-    {
-        startObjThread();
-    }
-    emit startObjThreadWork1();
 }
 
 void CameraCtlWidget::closeCamera()
 {
-    qDebug()<<"closeCamera";
-    if(m_objThread)
-    {
-        if(m_acqThread)
-        {
-            m_acqThread->stop();
-        }
-    }
-    if(m_xiCam.IsAcquisitionActive()){
-        m_xiCam.StopAcquisition();
-        m_xiCam.Close();
-    }
-    m_curImage.load(tr("D://test.jpg"));
-    emit sendImage(&m_curImage);
+    m_camCtrl->closeCamera();
+
 }
 
-void CameraCtlWidget::showImage(cv::Mat &image)
+void CameraCtlWidget::getCameraImage(cv::Mat &image)
 {
+    qDebug()<<"CameraCtlWidget::getCameraImage";
+    static int count = 10;
     m_curImage = QPixmap::fromImage(Mat2QImage(image));
-    emit sendImage(&m_curImage);
+    if(count++ >= 10){
+        emit updatePic(m_curImage);
+        count = 0;
+    }
 }
 
-QImage CameraCtlWidget::Mat2QImage(cv::Mat cvImg)
+void CameraCtlWidget::onComDPIChanged(int index)
+{
+        qDebug()<<"onComDPIChanged"<<index;
+}
+
+void CameraCtlWidget::onComImageTypeChanged(int index)
+{
+    qDebug()<<"onComImageTypeChanged"<<index;
+}
+
+void CameraCtlWidget::on_pbDefine_clicked()
+{
+      qDebug()<<"on_pbDefine_clicked";
+      emit selectROI();
+}
+
+
+void CameraCtlWidget::onComTriggerSelectorChanged(int index)
+{
+        qDebug()<<"onComTriggerSelectorChanged"<<index;
+}
+
+void CameraCtlWidget::onComTriggerSourceChanged(int index)
+{
+        qDebug()<<"onComTriggerSourceChanged"<<index;
+}
+
+
+void CameraCtlWidget::initial()
+{
+    QStringList list;
+    list << tr("1280*1024") << tr("800*600")
+         <<tr("640*512") << tr("320*256");
+    ui->comImageDPI->addItems(list);
+    ui->comImageDPI->setCurrentIndex(2);
+
+    list.clear();
+    list <<tr("Mono8")<<tr("Mono16")<<tr("Raw8")
+         <<tr("Raw16")<<tr("TRANSPORT");
+    ui->comImageType->addItems(list);
+    ui->comImageType->setCurrentIndex(1);
+
+    list.clear();
+    list<<tr("off")<<tr("Rising")
+       <<tr("Falling edge")<<tr("Software");
+    ui->comTriggerSource->addItems(list);
+
+    list.clear();
+    list<<tr("Frame start")<<tr("Exposure active")
+       <<tr("Frame burst start")<<tr("Frame burst active")
+      <<tr("Multitle exposure");
+    ui->comTriggerSelector->addItems(list);
+    list.clear();
+}
+
+QImage CameraCtlWidget::Mat2QImage(cv::Mat& cvImg)
 {
     QImage qImg;
     if(cvImg.channels() == 3){
@@ -147,3 +153,6 @@ QImage CameraCtlWidget::Mat2QImage(cv::Mat cvImg)
     }
     return qImg;
 }
+
+
+

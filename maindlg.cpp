@@ -7,16 +7,15 @@
 MainDlg::MainDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MainDlg),
-    m_camStatus(CAM_CLOSE),
+    m_camStatus(camClose),
     bRightWidgetShow(false)
 {
     //ui->setupUi(this);
 
+    this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
     //显示区
-    picArea = new QLabel(this);
-    picArea->setFixedSize(640,512);
-    picArea->setFrameShape(QFrame::Box);
-    picArea->setAlignment(Qt::AlignCenter);
+    picArea = new Widget(this);
+
     //进度条
     slider = new QSlider(Qt::Horizontal, this);
     labelDuration = new QLabel("framerate",this);
@@ -42,19 +41,31 @@ MainDlg::MainDlg(QWidget *parent) :
     setLayout(layout);
 
     camCtrl = new CameraCtlWidget(this);
-    connect(controls,SIGNAL(openCamera()),camCtrl,SLOT(openCamera()));
-    connect(controls,SIGNAL(closeCamera()),camCtrl,SLOT(closeCamera()));
-    connect(camCtrl,SIGNAL(sendImage(QPixmap*)),this,SLOT(showImage(QPixmap*)),Qt::DirectConnection);
-    //savefile
-    connect(controls,SIGNAL(startRecord()),camCtrl,SIGNAL(saveImage()));
-    connect(controls,SIGNAL(stopRecord()),camCtrl,SIGNAL(stopSaveImage()));
 
+    connect(controls,SIGNAL(openCamera(ulong)),camCtrl,SLOT(openCamera(ulong)));
+    connect(controls,SIGNAL(closeCamera()),camCtrl,SLOT(closeCamera()));
+
+    //connect(camCtrl->m_camCtrl,SIGNAL(getCameraImage(cv::Mat&)),this,SLOT(showImage(cv::Mat&)),Qt::DirectConnection);
+    connect(camCtrl,SIGNAL(updatePic(QPixmap&)),this,SLOT(showImage(QPixmap&)),Qt::DirectConnection);
+    //savefile
+    connect(controls,SIGNAL(startRecord()),camCtrl->m_camCtrl,SIGNAL(saveImage()));
+    connect(controls,SIGNAL(stopRecord()),camCtrl->m_camCtrl,SIGNAL(stopSaveImage()));
+
+    //程序运行初始化
+    connect(camCtrl->m_camCtrl,SIGNAL(sendCameraInfo(char*,ulong)),controls,SLOT(initialCameraInfo(char*,ulong)));
+
+    //ROI
+    connect(camCtrl,SIGNAL(selectROI()),picArea,SLOT(selectROI()));
+    //程序布局
     layout->addWidget(camCtrl,0,1);
     camCtrl->hide();
 
     listFileWidget = new QListWidget(this);
     layout->addWidget(listFileWidget,0,2);
     listFileWidget->hide();
+
+    connect(this,SIGNAL(initialCamera()),camCtrl->m_camCtrl,SLOT(initialCamera()));
+    //emit initialCamera();
 }
 
 
@@ -103,8 +114,10 @@ void MainDlg::cameraSetting(bool checkedFlag)
     }
 }
 
-void MainDlg::showImage(QPixmap *pic)
+void MainDlg::showImage(QPixmap &image)
 {
-  //  qDebug()<<"show";
-    picArea->setPixmap(*pic);
+    picArea->setPicture(image);
+    picArea->update(30,30,640,512);//部分区域刷新
 }
+
+

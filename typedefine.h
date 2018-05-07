@@ -1,37 +1,42 @@
 ﻿#ifndef TYPEDEFINE_H
 #define TYPEDEFINE_H
 #include "./XiAPI/xiApiPlusOcv.hpp"
+#include <QStringList>
 
 enum WORKSMODE{fileReplayMode,camAsquistionMode};
 
 enum CAMSTATUS{camClose,camOnAsquistion,camRecording,camStopRecord};
 
-    //曝光时间
-#define MIN_EXPOSURE_TIME       100
-#define MAX_EXPOSURE_TIME       10000
-#define INC_EXPOSURE_TIME       10
-    //光圈
-#define MIN_LENS_APERTURE       100
-#define MAX_LENS_APERTURE       1000
-#define INC_LENS_APERTURE       10
-  //帧率
-#define MIN_FRAME_RATE          20
-#define MAX_FRAME_RATE          100
-#define INC_FRAME_RATE          10
-    //焦距
-#define MIN_FOCUS_DISTANCE      10
-#define MAX_FOCUS_DISTANCE      100
-#define INC_FOCUS_DISTANCE      1
+//    //曝光时间
+//#define MIN_EXPOSURE_TIME       100
+//#define MAX_EXPOSURE_TIME       10000
+//#define INC_EXPOSURE_TIME       10
+//    //光圈
+//#define MIN_LENS_APERTURE       100
+//#define MAX_LENS_APERTURE       1000
+//#define INC_LENS_APERTURE       10
+//  //帧率
+//#define MIN_FRAME_RATE          20
+//#define MAX_FRAME_RATE          100
+//#define INC_FRAME_RATE          10
+//    //焦距
+//#define MIN_FOCUS_DISTANCE      10
+//#define MAX_FOCUS_DISTANCE      100
+//#define INC_FOCUS_DISTANCE      1
 
 typedef struct{
     int devID;
-    int devStatus;
+    CAMSTATUS devStatus;
     int exposureTime;
-    float lensAperture;
     float frameRate;
-    float focusDistance;
+    bool bIsAutoWhiteBlance;//自动白平衡
+
     float width;
     float height;
+    float offsetX;
+    float offsetY;
+
+
     //触发源 包括无、上升沿、下降沿、软件、高电平、低电平六种
     XI_TRG_SOURCE trggerSource;
     //触发方式

@@ -10,6 +10,8 @@
 #include <QTimer>
 #include "acquisitionthread.h"
 
+#include "cameractrl.h"
+
 namespace Ui {
 class CameraCtlWidget;
 }
@@ -21,38 +23,41 @@ class CameraCtlWidget : public QWidget
 public:
     explicit CameraCtlWidget(QWidget *parent = 0);
     ~CameraCtlWidget();
-
-
-    void startObjThread();
+    CameraCtrl* m_camCtrl;
 public slots:
     void on_test_clicked();
-    void openCamera();
+
+    void openCamera(unsigned long devID);
     void closeCamera();
 
-    void showImage(cv::Mat& image);
-
+private slots:
+    void getCameraImage(cv::Mat& image);
+    void onComDPIChanged(int index);
+    void onComImageTypeChanged(int index);
+    void on_pbDefine_clicked();
+    void onComTriggerSelectorChanged(int index);
+    void onComTriggerSourceChanged(int index);
 signals:
-    void startObjThreadWork1();
     void saveImage();
     void stopSaveImage();
 
-    void sendImage(QPixmap* pixmap);
+    void dlgClose();
+    void updatePic(QPixmap& pic);
+
+    void selectROI();
 
 private:
     Ui::CameraCtlWidget *ui;
+    QWidget* m_wndParent;
 
-    xiAPIplusCameraOcv m_xiCam;
-
-    AcquisitionThread* m_acqThread;
-    QThread* m_objThread;
-
-    QImage Mat2QImage(cv::Mat cvImg);
     void initial();
     bool m_bIsRecording;
     DEVICE_INFO getDevInfo(xiAPIplus_Camera& cam);
 
     void readDevParaFromXML(DEVICE_SETTING *pDevInfo);
     void writeDevParaToXML(xiAPIplusCameraOcv &cam);
+
+    QImage Mat2QImage(cv::Mat& cvImg);
     QPixmap m_curImage;
 };
 

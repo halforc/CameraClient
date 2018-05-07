@@ -1,14 +1,9 @@
-#ifndef MAINDLG_H
+﻿#ifndef MAINDLG_H
 #define MAINDLG_H
 #include "cameractlwidget.h"
 #include <QDialog>
 #include <QPushButton>
 #include <QBoxLayout>
-
-#define CAM_CLOSE       -1
-#define ASQUISITION     0
-#define RECORDING       1
-#define REPLAYING       2
 
 #include <QLabel>
 #include <QSlider>
@@ -16,7 +11,9 @@
 #include <QComboBox>
 #include <QListWidget>
 #include "playercontrols.h"
-
+#include <QPainter>
+#include <QTime>
+#include "widget.h"
 namespace Ui {
 class MainDlg;
 }
@@ -29,16 +26,22 @@ public:
     explicit MainDlg(QWidget *parent = 0);
     ~MainDlg();
 
-public slots:
-    void test();
-    void changeMode(int status);
+signals:
+    void initialCamera();
 
-    void fileList(bool checkedFlag);
-    void cameraSetting(bool checkedFlag);
-    void showImage(QPixmap* pic);
+public slots:
+    void showImage(QPixmap &image);
+
+private slots:
+    void test();
+    void changeMode(int status);//回放和视频采集切换
+
+    void fileList(bool checkedFlag);//文件列表
+    void cameraSetting(bool checkedFlag);//相机设置界面
 private:
     Ui::MainDlg *ui;
-    QLabel* picArea;
+    //QLabel* picArea;
+    Widget* picArea;
     QSlider *slider;
     QLabel *labelDuration;
     CameraCtlWidget* camCtrl;
@@ -52,6 +55,7 @@ private:
     QGridLayout *layout;
 
     bool bRightWidgetShow;
+
 };
 
 #endif // MAINDLG_H

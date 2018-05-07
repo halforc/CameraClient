@@ -65,7 +65,7 @@ public slots:
 
 signals:
     //camera oper
-    void openCamera();
+    void openCamera(ulong);
     void camStopAsquistion();
     void startRecord();
     void stopRecord();
@@ -94,6 +94,8 @@ private slots:
 
     void recordToFile();
     void openReplayFile();
+
+    void initialCameraInfo(char* camName,ulong camNumber);
 private:
     QBoxLayout *layout;
     //设备控制

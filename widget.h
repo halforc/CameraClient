@@ -1,0 +1,65 @@
+#ifndef WIDGET_H
+#define WIDGET_H
+
+#include <QWidget>
+#include <QMouseEvent>
+#include <QPen>
+#include <QFont>
+#include <QPainter>
+#include <QMenu>
+#include <QPixmap>
+#include <QPainterPath>
+
+class Widget : public QWidget
+{
+    Q_OBJECT
+    
+public:
+    explicit Widget(QWidget *parent = 0);
+    ~Widget();
+
+    void setPicture(QPixmap& pic);
+
+protected:
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void paintEvent(QPaintEvent *event);
+private:
+    QPoint dragPosition;
+
+    QPixmap m_curPic;
+
+    void drawXLine();
+    void drawYLine();
+
+    bool m_bROIFlag;
+    QPoint ptTopLeft;
+    QPoint ptBottomRight;
+    QPoint lastPoint;
+    QPoint endPoint;
+    bool m_bMoveFlag;
+    int m_iChangeSizeFlag;
+
+    QRect recTopLeft;
+    QRect recBottomRight;
+    QRect recTopRight;
+    QRect recBottomLeft;
+    QPainterPath recPath;//存储ROI区域 左上角和右下角
+
+
+
+    QMenu *contentMenu;
+    void createContentMenu();
+    void updateRectsInfo();
+private slots:
+    void slotQuit();
+    void slotChangelog();
+    void slotHomepage();
+    void soltAbout();
+
+public slots:
+    void selectROI();
+};
+
+#endif // WIDGET_H

@@ -34,6 +34,8 @@ private:
     QMutex mutex;
     int m_nCount;
     int m_status;
+
+    QString strPath;
 };
 
 

@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <qxmlstream.h>
+#include <QTime>
 AcquisitionThread::AcquisitionThread(QObject *parent)
     : QObject(parent)
 {
@@ -35,7 +36,6 @@ void AcquisitionThread::getImage()
     cv::Mat cv_mat_image;
     QString strName;
     XI_IMG_FORMAT format;
-    QString strPath;
     {
         QMutexLocker locker(&mutex);
         m_xiCam->StartAcquisition();
@@ -67,11 +67,15 @@ void AcquisitionThread::getImage()
                 }
                 strName = strPath + "image "+ QString::number(m_nCount)+".dat";
                 imageToStreamFile(cv_mat_image,strName);
-               // qDebug()<<"save file "<<strName;
+
+                QTime current_time =QTime::currentTime();
+                int msec = current_time.msec();//当前的毫秒
+                qDebug()<<QString::number(msec);
+                qDebug()<<"save file "<<strName;
                 m_nCount++;
             }else if(m_status == camStopRecord){
                 writeConfigFile(strPath + "configInfo.xml");
-                m_nCount = 0;
+                m_nCount = 0;//溢出问题
                 m_status = camOnAsquistion;
             }else{
                 if (format == XI_RAW16 || format == XI_MONO16)
@@ -194,6 +198,7 @@ void AcquisitionThread::writeConfigFile(QString filename)
     xmlWriter.writeStartElement("XiMea Cameara USB3.0 file info");
 
     xmlWriter.writeTextElement(tr("frame number"),QString::number(m_nCount));
+    xmlWriter.writeTextElement(tr("first frame"),strPath + tr("image 0.dat"));
 
     xmlWriter.writeEndElement();        //相机参数
     xmlWriter.writeEndDocument();
