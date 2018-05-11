@@ -26,7 +26,7 @@ CameraCtlWidget::CameraCtlWidget(QWidget *parent) :
 
     m_camCtrl = new CameraCtrl();
     connect(m_camCtrl,SIGNAL(getCameraImage(cv::Mat&)),this,SLOT(getCameraImage(cv::Mat&)),Qt::DirectConnection);
-    connect(ui->comImageDPI,SIGNAL(currentIndexChanged(int)),this,SLOT(onComDPIChanged(int)));
+    connect(ui->comImageDPI,SIGNAL(currentIndexChanged(QString)),this,SLOT(onComDPIChanged(QString)));
     connect(ui->comImageType,SIGNAL(currentIndexChanged(int)),this,SLOT(onComImageTypeChanged(int)));
     connect(ui->comTriggerSelector,SIGNAL(currentIndexChanged(int)),this,SLOT(onComTriggerSelectorChanged(int)));
     connect(ui->comTriggerSource,SIGNAL(currentIndexChanged(int)),this,SLOT(onComTriggerSourceChanged(int)));
@@ -74,20 +74,31 @@ void CameraCtlWidget::getCameraImage(cv::Mat &image)
     }
 }
 
-void CameraCtlWidget::onComDPIChanged(int index)
+void CameraCtlWidget::onComDPIChanged(QString str)
 {
-        qDebug()<<"onComDPIChanged"<<index;
+    qDebug()<<"onComDPIChanged"<<str;
+    QStringList list = str.split('*');
+    qDebug()<<((QString)list[0]).toInt()<<((QString)list[1]).toInt();
+    int width = ((QString)list[0]).toInt();
+    int height = ((QString)list[1]).toInt();
+    m_camCtrl->setROIWidth(width);
+    m_camCtrl->setROIHeight(height);
+    m_camCtrl->setROIOffsetX(640-width/2);
+    m_camCtrl->setROIOffsetY(512-height/2);
 }
 
 void CameraCtlWidget::onComImageTypeChanged(int index)
 {
     qDebug()<<"onComImageTypeChanged"<<index;
+    m_camCtrl->setImageFormat(index);
 }
 
 void CameraCtlWidget::on_pbDefine_clicked()
 {
       qDebug()<<"on_pbDefine_clicked";
-      emit selectROI();
+      QRect rect(0,0,1,1);
+      //m_camCtrl->getROIRect();
+      emit selectROI(rect);
 }
 
 
@@ -112,7 +123,7 @@ void CameraCtlWidget::initial()
 
     list.clear();
     list <<tr("Mono8")<<tr("Mono16")<<tr("Raw8")
-         <<tr("Raw16")<<tr("TRANSPORT");
+         <<tr("Raw16");
     ui->comImageType->addItems(list);
     ui->comImageType->setCurrentIndex(1);
 

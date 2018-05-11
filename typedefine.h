@@ -7,69 +7,46 @@ enum WORKSMODE{fileReplayMode,camAsquistionMode};
 
 enum CAMSTATUS{camClose,camOnAsquistion,camRecording,camStopRecord};
 
-//    //曝光时间
-//#define MIN_EXPOSURE_TIME       100
-//#define MAX_EXPOSURE_TIME       10000
-//#define INC_EXPOSURE_TIME       10
-//    //光圈
-//#define MIN_LENS_APERTURE       100
-//#define MAX_LENS_APERTURE       1000
-//#define INC_LENS_APERTURE       10
-//  //帧率
-//#define MIN_FRAME_RATE          20
-//#define MAX_FRAME_RATE          100
-//#define INC_FRAME_RATE          10
-//    //焦距
-//#define MIN_FOCUS_DISTANCE      10
-//#define MAX_FOCUS_DISTANCE      100
-//#define INC_FOCUS_DISTANCE      1
-
 typedef struct{
-    int devID;
-    CAMSTATUS devStatus;
-    int exposureTime;
-    float frameRate;
-    bool bIsAutoWhiteBlance;//自动白平衡
+    int curDevID;
 
-    float width;
-    float height;
-    float offsetX;
-    float offsetY;
-
-
-    //触发源 包括无、上升沿、下降沿、软件、高电平、低电平六种
-    XI_TRG_SOURCE trggerSource;
-    //触发方式
-    XI_TRG_SELECTOR trggerSelector;
-}DEVICE_SETTING,*PDEVICE_SETTING;
-
-typedef struct{
-    int devNum;
-    //曝光时间
-    int miniExposureTime;
+    int curExposureTime;
+    int miniExposureTime; //ExposureTime
     int maxExposureTime;
     int exposureTimeIncrement;
-    //光圈
-    float miniLensAperture;
-    float maxLensAperture;
-    float lensApertureIncrement;
-    //帧率
-    float miniFrameRate;
+
+    float curFrameRate;
+    float miniFrameRate;    //framerate
     float maxFrameRate;
     float frameRateIncreament;
-    //焦距
-    float miniFocusDistance;
-    float maxFocusDistance;
-    float focusDistanceIncrement;
-    //宽度
-    float miniWidth;
-    float maxWidth;
-    float widthIncrement;
-    //高度
-    float miniHeight;
-    float maxHeight;
-    float heightIncrement;
-    DEVICE_SETTING setting;
+
+    int curOffsetX;
+    int miniOffsetX;//OffsetX
+    int maxOffsetX;
+    int offsetXIncreament;
+
+    int curOffsetY;
+    int miniOffsetY;//OffsetY
+    int maxOffsetY;
+    int offsetYIncreament;
+
+    bool bIsAutoWhiteBlance;//Auto White Blance
+
+    int curWidth;
+    int miniWidth;//width
+    int maxWidth;
+    int widthIncrement;
+
+    int curHeight;
+    int miniHeight;//height
+    int maxHeight;
+    int heightIncrement;
+
+    XI_IMG_FORMAT imageFormate;
+
+    XI_TRG_SOURCE trggerSource;
+
+    XI_TRG_SELECTOR trggerSelector;    //触发方式
 
 }DEVICE_INFO,*PDEV_INFO;
 

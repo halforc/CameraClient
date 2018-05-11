@@ -17,9 +17,7 @@ public:
     explicit CameraCtrl(QObject *parent = 0);
     ~CameraCtrl();
 
-    void getCameraPara();
     void setDrawingRect(QRect& rect);
-    void setInterestRectRect(QRect& rect);
     QRect getDrawingRect();
     void saveParaToFile(DEVICE_INFO& para,QString filename);
     DEVICE_INFO* getParaFromFile(QString filename);
@@ -30,12 +28,12 @@ public:
 private:
     xiAPIplusCameraOcv m_xiCam;
     ulong m_nDevNumber;
+    int m_curDevice;
 
     AcquisitionThread* m_acqThread;
     QThread* m_objThread;
 
-    DEVICE_SETTING m_curDevInfo;
-    QVector<DEVICE_SETTING> m_vecDevice;
+    DEVICE_INFO m_devInfo;
 
     QPixmap m_curPic;
 
@@ -45,13 +43,24 @@ private:
     int m_offsetHeight;
     char m_camName[256];
 
+    XI_IMG_FORMAT m_imageFormat[4];
+
+    void getCameraPara();
+
 public:
     bool openCamera(unsigned long devID);
     void closeCamera();
+    QRect getROIRect();
+    int setROIOffsetX(int offsetX);
+    int setROIOffsetY(int offsetY);
+    int setROIWidth(int width);
+    int setROIHeight(int height);
+
+    bool setImageFormat(int index);
 
     void startObjThread();
 
-    bool readDevParaFromXML(DEVICE_SETTING *pDevInfo);
+    bool readDevParaFromXML(DEVICE_INFO *pDevInfo);
     void writeDevParaToXML(xiAPIplusCameraOcv &cam);
 signals:
     void startAcquistionWork();

@@ -55,7 +55,7 @@ MainDlg::MainDlg(QWidget *parent) :
     connect(camCtrl->m_camCtrl,SIGNAL(sendCameraInfo(char*,ulong)),controls,SLOT(initialCameraInfo(char*,ulong)));
 
     //ROI
-    connect(camCtrl,SIGNAL(selectROI()),picArea,SLOT(selectROI()));
+    connect(camCtrl,SIGNAL(selectROI(QRect&)),picArea,SLOT(selectROI(QRect&)));
     //程序布局
     layout->addWidget(camCtrl,0,1);
     camCtrl->hide();

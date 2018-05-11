@@ -7,21 +7,14 @@
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     m_bROIFlag(false),
-    m_bMoveFlag(false),
-    m_iChangeSizeFlag(0)
+    //m_bMoveFlag(false),
+    m_iChangeSizeFlag(-1)
 {
     this->setWindowOpacity(0.5);
     this->setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
     this->setMouseTracking(true);
     this->setAttribute(Qt::WA_TranslucentBackground);
     this->setFixedSize(640+FRAME_SIZE * 2,512+FRAME_SIZE * 2);//+60
-    ptTopLeft = QPoint(50,50);
-    ptBottomRight = QPoint(370,306);
-    updateRectsInfo();
-    recPath.addRect(recTopLeft);
-    recPath.addRect(recTopRight);
-    recPath.addRect(recBottomLeft);
-    recPath.addRect(recBottomRight);
    // createContentMenu();
 }
 
@@ -49,24 +42,26 @@ void Widget::mousePressEvent(QMouseEvent * event){
         }else if(recBottomRight.contains(lastPoint)){
             m_iChangeSizeFlag = 4;
         }else if(rec.contains(lastPoint)){
-            m_bMoveFlag = true;
-        }else{
-            m_bMoveFlag = false;
             m_iChangeSizeFlag = 0;
+        }else{
+            m_iChangeSizeFlag = -1;
         }
     }
 }
 
 void Widget::mouseReleaseEvent(QMouseEvent * event)
 {
-    if (event->button() == Qt::LeftButton){
-        endPoint = event->pos();
-        update(FRAME_SIZE,FRAME_SIZE,640,512);
-        event->accept();
-        m_bMoveFlag = false;
-        m_iChangeSizeFlag = 0;
-        qDebug()<<"release";
-        updateRectsInfo();
+    if (event->button() == Qt::LeftButton &&
+            (m_iChangeSizeFlag != -1)){
+       QRect rect = QRect(FRAME_SIZE,FRAME_SIZE,640,512);
+       if(rect.contains(QRect(ptTopLeft,ptBottomRight))){
+            endPoint = event->pos();
+            update(FRAME_SIZE,FRAME_SIZE,640,512);
+            event->accept();
+            m_iChangeSizeFlag = -1;
+            qDebug()<<"release";
+            updateRectsInfo();
+          }
       }
 }
 
@@ -84,41 +79,64 @@ void Widget::mouseMoveEvent(QMouseEvent * event){
         this->setCursor(Qt::ArrowCursor);
     }
 
-    if (event->buttons() == Qt::LeftButton){
-        QPoint pt = event->pos();
-        QRect tempRec = QRect(ptTopLeft,ptBottomRight);
-        qDebug()<<"size"<<tempRec;
-        if(m_iChangeSizeFlag != 0){
-            //limit the size!!!!
-            switch(m_iChangeSizeFlag){
-            case 1:
-                ptTopLeft = pt;//TopLeft
-                break;
-            case 2:
-                ptTopLeft.setY(pt.y());//TopRight
-                ptBottomRight.setX(pt.x());
-                break;
-            case 3:
-                ptTopLeft.setX(pt.x());//bottomleft
-                ptBottomRight.setY(pt.y());
-                break;
-            case 4:
-                ptBottomRight = pt;//bottomright
-                break;
-            default:
-                break;
+    if (event->buttons() == Qt::LeftButton && m_iChangeSizeFlag != -1){
+        endPoint = event->pos();
+        QRect rectROI = QRect(ptTopLeft,ptBottomRight);
+        QRect rect(FRAME_SIZE,FRAME_SIZE,640,512);
+        switch(m_iChangeSizeFlag){
+        case 0:
+            if(ptTopLeft.x() < rect.x()){
+                ptTopLeft.setX(rect.topLeft().x() + 1);
+                ptBottomRight.setX(ptTopLeft.x()+rectROI.width()-1);
+                            qDebug()<<"not 1";
+            }else if(ptTopLeft.y() < rect.y()){
+                ptTopLeft.setY(rect.topLeft().y() + 1);
+                ptBottomRight.setY(ptTopLeft.y()+rectROI.height()-1);
+            }else if(ptBottomRight.x() > rect.bottomRight().x()){
+                            qDebug()<<"not 2";
+                ptBottomRight.setX(rect.bottomRight().x() - 1);
+                ptTopLeft.setX(ptBottomRight.x()-rectROI.width()+1);
+                                    qDebug()<<"not 3";
+            }else if(ptBottomRight.y() > rect.bottomRight().y()){
+                ptBottomRight.setY(rect.bottomRight().y() - 1);
+                ptTopLeft.setY(ptBottomRight.y()-rectROI.height()+1);
+                                   qDebug()<<"not 4";
+            }else{
+                ptTopLeft = ptTopLeft + endPoint-lastPoint;
+                ptBottomRight = ptBottomRight + endPoint-lastPoint;
             }
-            update(FRAME_SIZE,FRAME_SIZE,640,512);
-            qDebug()<<"change size";
-        }else if(m_bMoveFlag){
-            endPoint = event->pos();
-            ptTopLeft += endPoint-lastPoint;
-            ptBottomRight += endPoint-lastPoint;
             qDebug()<<"point:"<<ptTopLeft;
             lastPoint = endPoint;
-            update(FRAME_SIZE,FRAME_SIZE,640,512);
-            event->accept();
+            qDebug()<<"move" << ptTopLeft;
+            recPath.translate(endPoint-lastPoint);
+            break;
+        case 1:
+            if(endPoint.x() >= rect.topLeft().x() && endPoint.y() >= rect.topLeft().y()){
+                ptTopLeft = endPoint;//TopLeft
+            }
+            break;
+        case 2:
+            if(endPoint.x() <= rect.topRight().x() && endPoint.y() >= rect.topRight().y()){
+                ptTopLeft.setY(endPoint.y());//TopRight
+                ptBottomRight.setX(endPoint.x());
+            }
+            break;
+        case 3:
+            if(endPoint.x() >= rect.bottomLeft().x() && endPoint.y() <= rect.bottomLeft().y()){
+                ptTopLeft.setX(endPoint.x());//bottomleft
+                ptBottomRight.setY(endPoint.y());
+            }
+            break;
+        case 4:
+            if(endPoint.x() <= rect.bottomRight().x() && endPoint.y() <= rect.bottomRight().y()){
+                ptBottomRight = endPoint;//bottomright
+            }
+            break;
+        default:
+            break;
         }
+        update(FRAME_SIZE,FRAME_SIZE,640,512);
+        event->accept();
     }
 }
 
@@ -129,7 +147,12 @@ void Widget::paintEvent(QPaintEvent *){
     p.drawPixmap(FRAME_SIZE,FRAME_SIZE,640,512,m_curPic);
     if(m_bROIFlag){
         p.setPen(QPen(QColor("#ff0000"), 1, Qt::SolidLine));
-        recPath.translate(endPoint-lastPoint);
+        QRect rectROI = QRect(ptTopLeft,ptBottomRight);
+        QRect rect(FRAME_SIZE,FRAME_SIZE,640,512);
+        if (!rect.contains(rectROI)){
+            qDebug()<<"not contains";
+
+        }
         p.drawRect(QRect(ptTopLeft,ptBottomRight));
     }
     drawXLine();
@@ -141,12 +164,6 @@ void Widget::paintEvent(QPaintEvent *){
     QPainter p2(this);
     p2.setPen(QPen(QColor("#ddd"), 1, Qt::SolidLine));
     p2.drawRect(0,0,iwidth-1,iheight-1);
-
-//    QString showText="W:"+QString::number(iwidth)+"px\r\nH:"+QString::number(iheight)+"px";
-
-//    p2.setPen(QPen(QColor("#940080"), 1, Qt::SolidLine));
-//    p2.setFont(QFont("Arial", 10));
-//    p2.drawText(this->rect(),  Qt::AlignCenter,showText);
 }
 
 void Widget::drawXLine(){
@@ -274,9 +291,19 @@ void Widget::soltAbout(){
     QMessageBox::information(this,"About","IRuler by Awesomez V1.2.20130814",QMessageBox::Yes);
 }
 
-void Widget::selectROI()
+void Widget::selectROI(QRect& rect)
 {
     m_bROIFlag = !m_bROIFlag;
-    qDebug()<<"selectROI****"<<m_bROIFlag;
-    update(FRAME_SIZE,FRAME_SIZE,640,512);
+    if(m_bROIFlag){
+        ptTopLeft = QPoint(50,50);
+        ptBottomRight = QPoint(370,306);
+        roiSize = QSize(320,256);
+        updateRectsInfo();
+        recPath.addRect(recTopLeft);
+        recPath.addRect(recTopRight);
+        recPath.addRect(recBottomLeft);
+        recPath.addRect(recBottomRight);
+        qDebug()<<"selectROI****"<<rect;
+        update(FRAME_SIZE,FRAME_SIZE,640,512);
+    }
 }

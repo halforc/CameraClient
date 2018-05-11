@@ -32,7 +32,7 @@ public slots:
 
 private slots:
     void getCameraImage(cv::Mat& image);
-    void onComDPIChanged(int index);
+    void onComDPIChanged(QString str);
     void onComImageTypeChanged(int index);
     void on_pbDefine_clicked();
     void onComTriggerSelectorChanged(int index);
@@ -44,17 +44,18 @@ signals:
     void dlgClose();
     void updatePic(QPixmap& pic);
 
-    void selectROI();
+    void selectROI(QRect& rect);
 
 private:
     Ui::CameraCtlWidget *ui;
     QWidget* m_wndParent;
 
+
     void initial();
     bool m_bIsRecording;
     DEVICE_INFO getDevInfo(xiAPIplus_Camera& cam);
 
-    void readDevParaFromXML(DEVICE_SETTING *pDevInfo);
+    void readDevParaFromXML(DEVICE_INFO *pDevInfo);
     void writeDevParaToXML(xiAPIplusCameraOcv &cam);
 
     QImage Mat2QImage(cv::Mat& cvImg);

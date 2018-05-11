@@ -34,11 +34,13 @@ private:
     void drawYLine();
 
     bool m_bROIFlag;
+
     QPoint ptTopLeft;
     QPoint ptBottomRight;
+    QSize roiSize;
     QPoint lastPoint;
     QPoint endPoint;
-    bool m_bMoveFlag;
+//    bool m_bMoveFlag;
     int m_iChangeSizeFlag;
 
     QRect recTopLeft;
@@ -47,7 +49,7 @@ private:
     QRect recBottomLeft;
     QPainterPath recPath;//存储ROI区域 左上角和右下角
 
-
+    QRect rectArea;
 
     QMenu *contentMenu;
     void createContentMenu();
@@ -59,7 +61,7 @@ private slots:
     void soltAbout();
 
 public slots:
-    void selectROI();
+    void selectROI(QRect& rect);
 };
 
 #endif // WIDGET_H
