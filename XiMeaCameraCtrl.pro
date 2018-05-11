@@ -30,7 +30,8 @@ SOURCES += \
     acquisitionthread.cpp \
     playercontrols.cpp \
     widget.cpp \
-    cameractrl.cpp
+    cameractrl.cpp \
+    roidefine.cpp
 
 HEADERS += \
         maindlg.h \
@@ -39,11 +40,13 @@ HEADERS += \
     typedefine.h \
     playercontrols.h \
     widget.h \
-    cameractrl.h
+    cameractrl.h \
+    roidefine.h
 
 FORMS += \
         maindlg.ui \
-    cameractlwidget.ui
+    cameractlwidget.ui \
+    roidefine.ui
 
 INCLUDEPATH += D:\Qt\Qt_Opencv3.3_contrib\include
 INCLUDEPATH += ./XiAPI/

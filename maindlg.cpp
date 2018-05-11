@@ -13,9 +13,10 @@ MainDlg::MainDlg(QWidget *parent) :
     //ui->setupUi(this);
 
     this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
+    camCtrl = new CameraCtlWidget(this);
     //显示区
-    picArea = new Widget(this);
-
+    picArea = new Widget(camCtrl->m_camCtrl,this);
+    connect(camCtrl->m_camCtrl,SIGNAL(rectROIChanged(QRect&)),picArea,SLOT(rectROIChanged(QRect&)),Qt::DirectConnection);
     //进度条
     slider = new QSlider(Qt::Horizontal, this);
     labelDuration = new QLabel("framerate",this);
@@ -40,8 +41,6 @@ MainDlg::MainDlg(QWidget *parent) :
     layout->setSizeConstraint(QLayout::SetFixedSize);
     setLayout(layout);
 
-    camCtrl = new CameraCtlWidget(this);
-
     connect(controls,SIGNAL(openCamera(ulong)),camCtrl,SLOT(openCamera(ulong)));
     connect(controls,SIGNAL(closeCamera()),camCtrl,SLOT(closeCamera()));
 
@@ -56,6 +55,7 @@ MainDlg::MainDlg(QWidget *parent) :
 
     //ROI
     connect(camCtrl,SIGNAL(selectROI(QRect&)),picArea,SLOT(selectROI(QRect&)));
+    connect(camCtrl->m_camCtrl,SIGNAL(rectROIChanged(QRect&)),picArea,SLOT(rectROIChanged(QRect&)),Qt::DirectConnection);
     //程序布局
     layout->addWidget(camCtrl,0,1);
     camCtrl->hide();

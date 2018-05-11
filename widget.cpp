@@ -4,11 +4,11 @@
 #include <QDebug>
 #define FRAME_SIZE 30
 
-Widget::Widget(QWidget *parent) :
+Widget::Widget(CameraCtrl* camCtrl, QWidget *parent) :
     QWidget(parent),
     m_bROIFlag(false),
-    //m_bMoveFlag(false),
-    m_iChangeSizeFlag(-1)
+    m_iChangeSizeFlag(-1),
+    m_camCtrl(camCtrl)
 {
     this->setWindowOpacity(0.5);
     this->setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
@@ -53,15 +53,13 @@ void Widget::mouseReleaseEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton &&
             (m_iChangeSizeFlag != -1)){
-       QRect rect = QRect(FRAME_SIZE,FRAME_SIZE,640,512);
-       if(rect.contains(QRect(ptTopLeft,ptBottomRight))){
-            endPoint = event->pos();
-            update(FRAME_SIZE,FRAME_SIZE,640,512);
-            event->accept();
-            m_iChangeSizeFlag = -1;
-            qDebug()<<"release";
-            updateRectsInfo();
-          }
+        endPoint = event->pos();
+        update(FRAME_SIZE,FRAME_SIZE,640,512);
+        event->accept();
+        m_iChangeSizeFlag = -1;
+        qDebug()<<"release";
+        updateRectsInfo();
+        emit m_camCtrl->rectROIChanged(QRect(ptTopLeft,ptBottomRight),true);
       }
 }
 
@@ -111,30 +109,35 @@ void Widget::mouseMoveEvent(QMouseEvent * event){
             recPath.translate(endPoint-lastPoint);
             break;
         case 1:
-            if(endPoint.x() >= rect.topLeft().x() && endPoint.y() >= rect.topLeft().y()){
+            if(endPoint.x() >= rect.topLeft().x() && endPoint.x() <= ptBottomRight.x() - 160&&
+                    endPoint.y() >= rect.topLeft().y() && endPoint.y() <= ptBottomRight.y()-128){
                 ptTopLeft = endPoint;//TopLeft
             }
             break;
         case 2:
-            if(endPoint.x() <= rect.topRight().x() && endPoint.y() >= rect.topRight().y()){
+            if(endPoint.x() <= rect.topRight().x() && endPoint.x() >= ptTopLeft.x()+160&&
+                    endPoint.y() >= rect.topRight().y()&&endPoint.y() <=  ptBottomRight.y()-128){
                 ptTopLeft.setY(endPoint.y());//TopRight
                 ptBottomRight.setX(endPoint.x());
             }
             break;
         case 3:
-            if(endPoint.x() >= rect.bottomLeft().x() && endPoint.y() <= rect.bottomLeft().y()){
+            if(endPoint.x() >= rect.bottomLeft().x() && endPoint.x() <= ptBottomRight.x()-160&&
+                    endPoint.y() <= rect.bottomLeft().y() && endPoint.y() >= ptTopLeft.y()+128){
                 ptTopLeft.setX(endPoint.x());//bottomleft
                 ptBottomRight.setY(endPoint.y());
             }
             break;
         case 4:
-            if(endPoint.x() <= rect.bottomRight().x() && endPoint.y() <= rect.bottomRight().y()){
+            if(endPoint.x() <= rect.bottomRight().x() && endPoint.x() >= ptTopLeft.x()+160&&
+                    endPoint.y() <= rect.bottomRight().y() && endPoint.y() >= ptTopLeft.y()+128){
                 ptBottomRight = endPoint;//bottomright
             }
             break;
         default:
             break;
         }
+        emit m_camCtrl->rectROIChanged(QRect(ptTopLeft,ptBottomRight),false);
         update(FRAME_SIZE,FRAME_SIZE,640,512);
         event->accept();
     }
@@ -304,6 +307,14 @@ void Widget::selectROI(QRect& rect)
         recPath.addRect(recBottomLeft);
         recPath.addRect(recBottomRight);
         qDebug()<<"selectROI****"<<rect;
-        update(FRAME_SIZE,FRAME_SIZE,640,512);
     }
+    update(FRAME_SIZE,FRAME_SIZE,640,512);
+}
+
+void Widget::rectROIChanged(QRect& rect,bool modifyCam)
+{
+//    ptTopLeft = rect.topLeft();
+//    ptBottomRight = rect.bottomRight();
+//    update(FRAME_SIZE,FRAME_SIZE,640,512);
+    qDebug()<<"widget changed" << rect;
 }

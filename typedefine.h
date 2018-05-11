@@ -7,6 +7,29 @@ enum WORKSMODE{fileReplayMode,camAsquistionMode};
 
 enum CAMSTATUS{camClose,camOnAsquistion,camRecording,camStopRecord};
 
+typedef struct
+{
+    int curOffsetX;
+    int miniOffsetX;//OffsetX
+    int maxOffsetX;
+    int offsetXIncreament;
+
+    int curOffsetY;
+    int miniOffsetY;//OffsetY
+    int maxOffsetY;
+    int offsetYIncreament;
+
+    int curWidth;
+    int miniWidth;//width
+    int maxWidth;
+    int widthIncrement;
+
+    int curHeight;
+    int miniHeight;//height
+    int maxHeight;
+    int heightIncrement;
+}ROI_INFO,*pROI_INFO;
+
 typedef struct{
     int curDevID;
 
@@ -20,27 +43,9 @@ typedef struct{
     float maxFrameRate;
     float frameRateIncreament;
 
-    int curOffsetX;
-    int miniOffsetX;//OffsetX
-    int maxOffsetX;
-    int offsetXIncreament;
-
-    int curOffsetY;
-    int miniOffsetY;//OffsetY
-    int maxOffsetY;
-    int offsetYIncreament;
+    ROI_INFO ROIInfo;
 
     bool bIsAutoWhiteBlance;//Auto White Blance
-
-    int curWidth;
-    int miniWidth;//width
-    int maxWidth;
-    int widthIncrement;
-
-    int curHeight;
-    int miniHeight;//height
-    int maxHeight;
-    int heightIncrement;
 
     XI_IMG_FORMAT imageFormate;
 

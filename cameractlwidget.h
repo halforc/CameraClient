@@ -11,7 +11,7 @@
 #include "acquisitionthread.h"
 
 #include "cameractrl.h"
-
+#include "roidefine.h"
 namespace Ui {
 class CameraCtlWidget;
 }
@@ -37,6 +37,7 @@ private slots:
     void on_pbDefine_clicked();
     void onComTriggerSelectorChanged(int index);
     void onComTriggerSourceChanged(int index);
+
 signals:
     void saveImage();
     void stopSaveImage();
@@ -49,7 +50,7 @@ signals:
 private:
     Ui::CameraCtlWidget *ui;
     QWidget* m_wndParent;
-
+    ROIDefine* m_wROIDefine;
 
     void initial();
     bool m_bIsRecording;
