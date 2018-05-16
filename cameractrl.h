@@ -43,7 +43,8 @@ private:
     int m_offsetHeight;
     char m_camName[256];
 
-    XI_IMG_FORMAT m_imageFormat[4];   
+    XI_IMG_FORMAT m_imageFormat[4];
+    XI_TRG_SOURCE m_triggerSource[6];
 
     void getCameraPara();
 
@@ -60,6 +61,7 @@ public:
     void enableAutoExposure(bool flag);
 
     bool setImageFormat(int index);
+    void setTriggetSource(int index);
 
     void startObjThread();
 

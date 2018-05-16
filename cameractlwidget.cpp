@@ -251,6 +251,11 @@ void CameraCtlWidget::onEnableAutoExposure(bool flag)
 void CameraCtlWidget::onEnableDebounce(bool flag)
 {
     ui->pbDebounceSetup->setEnabled(flag);
+    if(flag){
+        m_camCtrl->getCameraHandle()->EnableGPIDebounce();
+    }else{
+        m_camCtrl->getCameraHandle()->DisableGPIDebounce();
+    }
 }
 
 void CameraCtlWidget::on_leExposure_textChanged(QString str)

@@ -3,9 +3,10 @@
 
 
 
-InputDebounceSetup::InputDebounceSetup(QWidget *parent) :
+InputDebounceSetup::InputDebounceSetup(CameraCtrl *pCameraCtrl, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::InputDebounceSetup)
+    ui(new Ui::InputDebounceSetup),
+    m_camctrl(pCameraCtrl)
 {
     ui->setupUi(this);
     setFixedSize(size());
@@ -22,4 +23,14 @@ InputDebounceSetup::~InputDebounceSetup()
 void InputDebounceSetup::on_pbClose_clicked()
 {
     this->close();
+}
+
+void InputDebounceSetup::on_pbT0Setting_clicked()
+{
+
+}
+
+void InputDebounceSetup::on_pbT1Setting_clicked()
+{
+
 }

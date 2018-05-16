@@ -10,6 +10,13 @@ CameraCtrl::CameraCtrl(QObject *parent) : QObject(parent)
     m_imageFormat[2] = XI_RAW8;
     m_imageFormat[3] = XI_RAW16;
 
+    m_triggerSource[0] = XI_TRG_OFF;
+    m_triggerSource[1] = XI_TRG_EDGE_RISING;
+    m_triggerSource[2] = XI_TRG_EDGE_FALLING;
+    m_triggerSource[3] = XI_TRG_SOFTWARE;
+    m_triggerSource[4] = XI_TRG_LEVEL_HIGH;
+    m_triggerSource[5] = XI_TRG_LEVEL_LOW;
+
     connect(this,SIGNAL(rectROIChanged(QRect&,bool)),this,SLOT(recROIChanged(QRect&,bool)),Qt::DirectConnection);
 }
 
@@ -146,6 +153,11 @@ bool CameraCtrl::setImageFormat(int index)
 {
     m_xiCam.SetImageDataFormat(m_imageFormat[index]);//wait to complete...
     return true;
+}
+
+void CameraCtrl::setTriggetSource(int index)
+{
+    m_xiCam.SetTriggerSource(index);
 }
 
 

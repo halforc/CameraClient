@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QPixmap>
+#include "cameractrl.h"
 
 namespace Ui {
 class InputDebounceSetup;
@@ -13,14 +14,18 @@ class InputDebounceSetup : public QDialog
     Q_OBJECT
 
 public:
-    explicit InputDebounceSetup(QWidget *parent = 0);
+    explicit InputDebounceSetup(CameraCtrl* pCameraCtrl,QWidget *parent = 0);
     ~InputDebounceSetup();
 
 private slots:
     void on_pbClose_clicked();
+    void on_pbT0Setting_clicked();
+    void on_pbT1Setting_clicked();
 
 private:
     Ui::InputDebounceSetup *ui;
+    CameraCtrl* m_camctrl;
+
 
     QPixmap m_pixmap;
 };
