@@ -43,7 +43,7 @@ private:
     int m_offsetHeight;
     char m_camName[256];
 
-    XI_IMG_FORMAT m_imageFormat[4];
+    XI_IMG_FORMAT m_imageFormat[4];   
 
     void getCameraPara();
 
@@ -55,6 +55,9 @@ public:
     int setROIOffsetY(int offsetY);
     int setROIWidth(int width);
     int setROIHeight(int height);
+
+    //auto exposure auto gain
+    void enableAutoExposure(bool flag);
 
     bool setImageFormat(int index);
 

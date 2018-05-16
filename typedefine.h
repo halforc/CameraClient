@@ -55,5 +55,12 @@ typedef struct{
 
 }DEVICE_INFO,*PDEV_INFO;
 
+typedef struct{
+    int priority;
+    int maxExposure;
+    int maxGain;
+    int targetLevel;
+}AEAG_PARA,*PAEAG_PARA;
+
 
 #endif // TYPEDEFINE_H

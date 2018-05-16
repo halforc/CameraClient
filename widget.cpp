@@ -2,7 +2,7 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QDebug>
-#define FRAME_SIZE 30
+#define FRAME_SIZE 32
 
 Widget::Widget(CameraCtrl* camCtrl, QWidget *parent) :
     QWidget(parent),
@@ -54,6 +54,14 @@ void Widget::mouseReleaseEvent(QMouseEvent * event)
     if (event->button() == Qt::LeftButton &&
             (m_iChangeSizeFlag != -1)){
         endPoint = event->pos();
+        ptTopLeft.setX((ptTopLeft.x() + 8)/16 * 16);
+        ptTopLeft.setY((ptTopLeft.y() + 1)/2 * 2);
+        int w = ptBottomRight.x() - ptTopLeft.x();
+        int h = ptBottomRight.y() - ptTopLeft.y();
+        w = (w + 8)/16 * 16;
+        h = (h + 1)/2*2;
+        ptBottomRight.setX(ptTopLeft.x()+w);
+        ptBottomRight.setY(ptTopLeft.y()+h);
         update(FRAME_SIZE,FRAME_SIZE,640,512);
         event->accept();
         m_iChangeSizeFlag = -1;
@@ -247,27 +255,7 @@ void Widget::drawYLine(){
     }
 }
 
-void Widget::createContentMenu(){
-    QAction *Tray_quit = new QAction("Quit", this);
-    //Tray_quit->setIcon(QIcon(":/image/image/delete.png"));
-    connect(Tray_quit, SIGNAL(triggered(bool)), this, SLOT(slotQuit()));
 
-    QAction *Tray_homepage = new QAction("Homepage", this);
-    connect(Tray_homepage, SIGNAL(triggered(bool)), this, SLOT(slotHomepage()));
-
-    QAction *Tray_changelog = new QAction("Changelog", this);
-    connect(Tray_changelog, SIGNAL(triggered(bool)), this, SLOT(slotChangelog()));
-
-    QAction *menuAbout = new QAction("About", this);
-    connect(menuAbout, SIGNAL(triggered(bool)), this, SLOT(soltAbout()));
-
-    contentMenu = new QMenu(this);
-    contentMenu->addAction(Tray_homepage);
-    contentMenu->addAction(Tray_changelog);
-    contentMenu->addAction(menuAbout);
-    contentMenu->addSeparator();
-    contentMenu->addAction(Tray_quit);
-}
 
 void Widget::updateRectsInfo()
 {
@@ -275,23 +263,6 @@ void Widget::updateRectsInfo()
     recTopRight =QRect(QPoint(ptBottomRight.x()-2,ptTopLeft.y()-2),QSize(4,4));
     recBottomLeft = QRect(QPoint(ptTopLeft.x()-2,ptBottomRight.y()-2),QSize(4,4));
     recBottomRight = QRect(QPoint(ptBottomRight.x()-2,ptBottomRight.y()-2),QSize(4,4));
-}
-
-void Widget::slotQuit(){
-    this->close();
-   // QApplication::quit();
-}
-
-void Widget::slotHomepage(){
-    QDesktopServices::openUrl(QUrl("https://github.com/Awesomez-Qt/IRuler"));
-}
-
-void Widget::slotChangelog(){
-    QDesktopServices::openUrl(QUrl("https://github.com/Awesomez-Qt/IRuler/commits/master"));
-}
-
-void Widget::soltAbout(){
-    QMessageBox::information(this,"About","IRuler by Awesomez V1.2.20130814",QMessageBox::Yes);
 }
 
 void Widget::selectROI(QRect& rect)
@@ -313,8 +284,8 @@ void Widget::selectROI(QRect& rect)
 
 void Widget::rectROIChanged(QRect& rect,bool modifyCam)
 {
-//    ptTopLeft = rect.topLeft();
-//    ptBottomRight = rect.bottomRight();
-//    update(FRAME_SIZE,FRAME_SIZE,640,512);
+    ptTopLeft = rect.topLeft();
+    ptBottomRight = rect.bottomRight();
+    update(FRAME_SIZE,FRAME_SIZE,640,512);
     qDebug()<<"widget changed" << rect;
 }

@@ -51,20 +51,15 @@ private:
     QPainterPath recPath;//存储ROI区域 左上角和右下角
 
     QRect rectArea;
-
-    QMenu *contentMenu;
-    void createContentMenu();
     void updateRectsInfo();
-private slots:
-    void slotQuit();
-    void slotChangelog();
-    void slotHomepage();
-    void soltAbout();
 
 public slots:
     void selectROI(QRect& rect);
 
     void rectROIChanged(QRect& rect,bool modifyCam);
+
+signals:
+    void ROIRectChanged(QRect& rect,bool modifyCam);
 };
 
 #endif // WIDGET_H

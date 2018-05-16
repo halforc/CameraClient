@@ -31,6 +31,14 @@ ROIDefine::ROIDefine(CameraCtrl* camctrl, QWidget *parent) :
 //    ui->offsetY->setValue(m_rectROI.y());
 //    ui->Width->setValue(m_rectROI.width());
 //    ui->Height->setValue(m_rectROI.height());
+    ui->offsetX->setSingleStep(16);
+    ui->offsetY->setSingleStep(2);
+    ui->Width->setSingleStep(16);
+    ui->Height->setSingleStep(2);
+    ui->offsetX->setMaximum(640);
+    ui->offsetY->setRange(0,512);
+    ui->Width->setRange(160,640);
+    ui->Height->setRange(126,512);
     ptTopLeft = QPoint(0,0);
     szROI = QSize(640,521);
 }
@@ -54,7 +62,9 @@ void ROIDefine::on_pbCancel_clicked()
 void ROIDefine::on_offsetX_valueChanged(int value)
 {
     qDebug()<<"on_offsetX_valueChanged"<<value;
-    ptTopLeft.setX(value);
+//    value = (value + 32+8)/16 * 16;
+//    ui->offsetX->setValue(value);
+//    ptTopLeft.setX(value);
     emit m_camCtrl->rectROIChanged(QRect(ptTopLeft,szROI),true);
 }
 
@@ -62,6 +72,8 @@ void ROIDefine::on_offsetX_valueChanged(int value)
 void ROIDefine::on_offsetY_valueChanged(int value)
 {
     qDebug()<<"on_offsetY_valueChanged"<<value;
+    value = (value+32 + 1)/2 * 2;
+    ui->offsetY->setValue(value);
     ptTopLeft.setY(value);
     emit m_camCtrl->rectROIChanged(QRect(ptTopLeft,szROI),true);
 }
@@ -69,6 +81,8 @@ void ROIDefine::on_offsetY_valueChanged(int value)
 void ROIDefine::on_Width_valueChanged(int value)
 {
     qDebug()<<"on_Width_valueChanged"<<value;
+    value = (value+32 + 8)/16 * 16;
+    ui->Width->setValue(value);
     szROI.setWidth(value);
     emit m_camCtrl->rectROIChanged(QRect(ptTopLeft,szROI),true);
 }
@@ -76,16 +90,18 @@ void ROIDefine::on_Width_valueChanged(int value)
 void ROIDefine::on_Height_valueChanged(int value)
 {
     qDebug()<<"on_Height_valueChanged"<<value;
+    value = (value+32 + 1)/2 * 2;
+    ui->Height->setValue(value);
     szROI.setHeight(value);
     emit m_camCtrl->rectROIChanged(QRect(ptTopLeft,szROI),true);
 }
 
-void ROIDefine::rectROIChanged(QRect &rect)
+void ROIDefine::rectROIChanged(QRect &rect,bool flag)
 {
-    ui->offsetX->setValue(rect.x());
-    ui->offsetY->setValue(rect.y());
-    ui->Width->setValue(rect.width());
-    ui->Height->setValue(rect.height());
+//    ui->offsetX->setValue(rect.x());
+//    ui->offsetY->setValue(rect.y());
+//    ui->Width->setValue(rect.width());
+//    ui->Height->setValue(rect.height());
     qDebug()<<"ROIDefine roidefine"<<rect;
 }
 

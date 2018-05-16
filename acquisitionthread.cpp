@@ -42,7 +42,7 @@ void AcquisitionThread::getImage()
         m_status = camOnAsquistion;
     }
     while(true){
-        qDebug()<<"status"<<m_status;
+        //qDebug()<<"status"<<m_status;
         if(m_xiCam->IsAcquisitionActive()){
             {
                 QMutexLocker locker(&mutex);

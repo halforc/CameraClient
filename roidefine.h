@@ -25,9 +25,9 @@ private slots:
     void on_Height_valueChanged(int value);
 
 public slots:
-    void rectROIChanged(QRect& rect,bool modifyCam);//connected with camctrl - rectROIChanged
+    void rectROIChanged(QRect& rect, bool flag);//connected with camctrl - rectROIChanged
 signals:
-
+    void ROIRectChanged(QRect& rect,bool flag);
 private:
     Ui::ROIDefine *ui;
     CameraCtrl* m_camCtrl;

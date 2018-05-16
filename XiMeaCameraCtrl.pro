@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT       += network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -31,7 +32,9 @@ SOURCES += \
     playercontrols.cpp \
     widget.cpp \
     cameractrl.cpp \
-    roidefine.cpp
+    roidefine.cpp \
+    autoexposuresetup.cpp \
+    inputdebouncesetup.cpp
 
 HEADERS += \
         maindlg.h \
@@ -41,12 +44,16 @@ HEADERS += \
     playercontrols.h \
     widget.h \
     cameractrl.h \
-    roidefine.h
+    roidefine.h \
+    autoexposuresetup.h \
+    inputdebouncesetup.h
 
 FORMS += \
         maindlg.ui \
     cameractlwidget.ui \
-    roidefine.ui
+    roidefine.ui \
+    autoexposuresetup.ui \
+    inputdebouncesetup.ui
 
 INCLUDEPATH += D:\Qt\Qt_Opencv3.3_contrib\include
 INCLUDEPATH += ./XiAPI/

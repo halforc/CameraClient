@@ -10,7 +10,7 @@ CameraCtrl::CameraCtrl(QObject *parent) : QObject(parent)
     m_imageFormat[2] = XI_RAW8;
     m_imageFormat[3] = XI_RAW16;
 
-    connect(this,SIGNAL(rectROIChanged(QRect&)),this,SLOT(recROIChanged(QRect&)),Qt::DirectConnection);
+    connect(this,SIGNAL(rectROIChanged(QRect&,bool)),this,SLOT(recROIChanged(QRect&,bool)),Qt::DirectConnection);
 }
 
 CameraCtrl::~CameraCtrl()
@@ -134,6 +134,14 @@ int CameraCtrl::setROIHeight(int height)
     return height;
 }
 
+void CameraCtrl::enableAutoExposure(bool flag)
+{
+    if(flag)
+        m_xiCam.EnableAutoExposureAutoGain();
+    else
+        m_xiCam.DisableAutoExposureAutoGain();
+}
+
 bool CameraCtrl::setImageFormat(int index)
 {
     m_xiCam.SetImageDataFormat(m_imageFormat[index]);//wait to complete...
@@ -194,7 +202,7 @@ void CameraCtrl::recROIChanged(QRect &rect, bool modifyCam)
 //    setROIOffsetY(rect.y());
 //    setROIWidth(rect.width());
 //    setROIHeight(rect.height());
-    qDebug()<<"CamCtrl roi rect"<<rect;
+    qDebug()<<"********CamCtrl roi rect"<<rect;
 }
 
 void CameraCtrl::getCameraPara()
@@ -209,27 +217,27 @@ void CameraCtrl::getCameraPara()
 //    m_devInfo.maxFrameRate = m_xiCam.GetFrameRate_Maximum();
 //    m_devInfo.frameRateIncreament = m_xiCam.GetFrameRate_Increment();
 
-//    m_devInfo.curOffsetX = m_xiCam.GetOffsetX();
-//    m_devInfo.miniOffsetX = m_xiCam.GetOffsetX_Minimum();
-//    m_devInfo.maxOffsetX = m_xiCam.GetOffsetX_Maximum();
-//    m_devInfo.offsetXIncreament = m_xiCam.GetOffsetX_Increment();
+//    m_devInfo.ROIInfo.curOffsetX = m_xiCam.GetOffsetX();
+//    m_devInfo.ROIInfo.miniOffsetX = m_xiCam.GetOffsetX_Minimum();
+//    m_devInfo.ROIInfo.maxOffsetX = m_xiCam.GetOffsetX_Maximum();
+//    m_devInfo.ROIInfo.offsetXIncreament = m_xiCam.GetOffsetX_Increment();
 
-//    m_devInfo.curOffsetY = m_xiCam.GetOffsetY();
-//    m_devInfo.miniOffsetY = m_xiCam.GetOffsetY_Minimum();
-//    m_devInfo.maxOffsetY = m_xiCam.GetOffsetY_Increment();
-//    m_devInfo.offsetYIncreament = m_xiCam.GetOffsetY_Increment();
+//    m_devInfo.ROIInfo.curOffsetY = m_xiCam.GetOffsetY();
+//    m_devInfo.ROIInfo.miniOffsetY = m_xiCam.GetOffsetY_Minimum();
+//    m_devInfo.ROIInfo.maxOffsetY = m_xiCam.GetOffsetY_Increment();
+//    m_devInfo.ROIInfo.offsetYIncreament = m_xiCam.GetOffsetY_Increment();
 
 //    m_devInfo.bIsAutoWhiteBlance = m_xiCam.IsWhiteBalanceAuto();
 
-//    m_devInfo.curWidth = m_xiCam.GetWidth();
-//    m_devInfo.miniWidth = m_xiCam.GetWidth_Minimum();
-//    m_devInfo.maxWidth = m_xiCam.GetWidth_Maximum();
-//    m_devInfo.widthIncrement = m_xiCam.GetWidth_Increment();
+//    m_devInfo.ROIInfo.curWidth = m_xiCam.GetWidth();
+//    m_devInfo.ROIInfo.miniWidth = m_xiCam.GetWidth_Minimum();
+//    m_devInfo.ROIInfo.maxWidth = m_xiCam.GetWidth_Maximum();
+//    m_devInfo.ROIInfo.widthIncrement = m_xiCam.GetWidth_Increment();
 
-//    m_devInfo.curHeight = m_xiCam.GetHeight();
-//    m_devInfo.miniHeight = m_xiCam.GetHeight_Minimum();
-//    m_devInfo.maxHeight = m_xiCam.GetHeight_Maximum();
-//    m_devInfo.heightIncrement = m_xiCam.GetHeight_Increment();
+//    m_devInfo.ROIInfo.curHeight = m_xiCam.GetHeight();
+//    m_devInfo.ROIInfo.miniHeight = m_xiCam.GetHeight_Minimum();
+//    m_devInfo.ROIInfo.maxHeight = m_xiCam.GetHeight_Maximum();
+//    m_devInfo.ROIInfo.heightIncrement = m_xiCam.GetHeight_Increment();
 
 //    m_devInfo.imageFormate = m_xiCam.GetImageDataFormat();
 //    m_devInfo.trggerSource = m_xiCam.GetTriggerSource();

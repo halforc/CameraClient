@@ -16,7 +16,7 @@ MainDlg::MainDlg(QWidget *parent) :
     camCtrl = new CameraCtlWidget(this);
     //显示区
     picArea = new Widget(camCtrl->m_camCtrl,this);
-    connect(camCtrl->m_camCtrl,SIGNAL(rectROIChanged(QRect&)),picArea,SLOT(rectROIChanged(QRect&)),Qt::DirectConnection);
+    connect(camCtrl->m_camCtrl,SIGNAL(rectROIChanged(QRect&,bool)),picArea,SLOT(rectROIChanged(QRect&,bool)),Qt::DirectConnection);
     //进度条
     slider = new QSlider(Qt::Horizontal, this);
     labelDuration = new QLabel("framerate",this);
@@ -55,7 +55,7 @@ MainDlg::MainDlg(QWidget *parent) :
 
     //ROI
     connect(camCtrl,SIGNAL(selectROI(QRect&)),picArea,SLOT(selectROI(QRect&)));
-    connect(camCtrl->m_camCtrl,SIGNAL(rectROIChanged(QRect&)),picArea,SLOT(rectROIChanged(QRect&)),Qt::DirectConnection);
+    //connect(camCtrl->m_camCtrl,SIGNAL(rectROIChanged(QRect&,bool)),picArea,SLOT(rectROIChanged(QRect&,bool)),Qt::DirectConnection);
     //程序布局
     layout->addWidget(camCtrl,0,1);
     camCtrl->hide();
@@ -117,7 +117,7 @@ void MainDlg::cameraSetting(bool checkedFlag)
 void MainDlg::showImage(QPixmap &image)
 {
     picArea->setPicture(image);
-    picArea->update(30,30,640,512);//部分区域刷新
+    picArea->update(20,20,650,522);//部分区域刷新30，30，642*512
 }
 
 

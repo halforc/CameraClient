@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -39,7 +39,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="offsetX"/>
+       <widget class="QSpinBox" name="offsetX">
+        <property name="maximum">
+         <number>640</number>
+        </property>
+        <property name="singleStep">
+         <number>16</number>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QLabel" name="label_2">
@@ -93,7 +100,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="offsetY"/>
+       <widget class="QSpinBox" name="offsetY">
+        <property name="maximum">
+         <number>512</number>
+        </property>
+        <property name="singleStep">
+         <number>2</number>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QLabel" name="label_3">
