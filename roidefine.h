@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "cameractrl.h"
+#include <QEvent>
 namespace Ui {
 class ROIDefine;
 }
@@ -20,21 +21,22 @@ private slots:
     void on_pbOK_clicked();
     void on_pbCancel_clicked();
     void on_offsetX_valueChanged(int value);
+
     void on_offsetY_valueChanged(int value);
     void on_Width_valueChanged(int value);
     void on_Height_valueChanged(int value);
 
-public slots:
-    void rectROIChanged(QRect& rect, bool flag);//connected with camctrl - rectROIChanged
+public:
+    void changedROI(QRect& rect, bool flag=false);//connected with camctrl - rectROIChanged
+
 signals:
-    void ROIRectChanged(QRect& rect,bool flag);
+    void ROIRectChanged(QRect& rect);
+    void notifyParent(QRect rect,bool bSave);
 private:
     Ui::ROIDefine *ui;
     CameraCtrl* m_camCtrl;
     xiAPIplusCameraOcv* m_cam;
     QRect m_rectROI;
-    QPoint ptTopLeft;
-    QSize szROI;
 };
 
 #endif // ROIDEFINE_H

@@ -13,6 +13,8 @@ InputDebounceSetup::InputDebounceSetup(CameraCtrl *pCameraCtrl, QWidget *parent)
     m_pixmap.load("../XiMeaCameraCtrl/images/debouncer_big.png");
 
     ui->lbImage->setPixmap(m_pixmap);
+    ui->pbT0Settint->setText(QString::number(m_camctrl->getCameraHandle()->GetGPIDebounceFirstEdge_Maximum())+"us");
+    ui->pbT1Setting->setText(QString::number(m_camctrl->getCameraHandle()->GetGPIDebounceSecondEdge_Maximum())+"us");
 }
 
 InputDebounceSetup::~InputDebounceSetup()

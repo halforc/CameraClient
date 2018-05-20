@@ -36,14 +36,18 @@ public slots:
     void openCamera(unsigned long devID);
     void closeCamera();
 
-    void ROIRectChanged(QRect &rect);
+    void rectROIChanged(QRect &rect,bool flag);
 
 private slots:
     void getCameraImage(cv::Mat& image);
-    void onComDPIChanged(QString str);
+    void onComDPIChanged(int index);
     void onComImageTypeChanged(int index);
     void on_pbDefine_clicked();
     void on_pbROI_clicked();
+    void on_pbSWPing_clicked();
+
+    void onReceiveDefine(QRect rect,bool bSave);
+
     void on_pbAutoExposureSetup_clicked();
     void on_pbDebounceSetup_clicked();
     void onComTriggerSelectorChanged(int index);
@@ -68,7 +72,8 @@ signals:
     void updatePic(QPixmap& pic);
 
     void selectROI(QRect& rect);
-
+    void ROIRectChanged(QRect& rect,bool flag);
+    void notifyWidgetAreaROI(QRect& rect);
 private:
     Ui::CameraCtlWidget *ui;
     QWidget* m_wndParent;
@@ -82,6 +87,7 @@ private:
     bool m_bIsRecording;
     bool m_bIsAutoExposure;
     DEVICE_INFO getDevInfo(xiAPIplus_Camera& cam);
+    void updateFrameRateInfo();
 
     void readDevParaFromXML(DEVICE_INFO *pDevInfo);
     void writeDevParaToXML(xiAPIplusCameraOcv &cam);
@@ -89,6 +95,8 @@ private:
     QImage Mat2QImage(cv::Mat& cvImg);
     QPixmap m_curImage;
     QImage myImage;
+
+    QRect rectROI;
 
     qint64 blockSize;
 

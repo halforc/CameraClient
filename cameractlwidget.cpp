@@ -34,10 +34,9 @@ CameraCtlWidget::CameraCtlWidget(QWidget *parent) :
     connect(myTimer,SIGNAL(timeout()),this,SLOT(SendData()));
 
     QStringList list;
-    list << tr("1280*1024") << tr("800*600")
-         <<tr("640*512") << tr("320*256");
+    list << tr("1280*1024")<<tr("640*512");
     ui->comImageDPI->addItems(list);
-    ui->comImageDPI->setCurrentIndex(2);
+    ui->comImageDPI->setCurrentIndex(0);
 
     list.clear();
     list <<tr("Mono8")<<tr("Mono16")<<tr("Raw8")
@@ -68,17 +67,15 @@ CameraCtlWidget::CameraCtlWidget(QWidget *parent) :
     ui->comGPO->addItems(list);
 
     list.clear();
-    list<<tr("ms")<<tr("s")<<tr("min")<<tr("h");
-    ui->comInterval->addItems(list);
-    list.clear();
+
 
     ui->pbDebounceSetup->setEnabled(false);
     ui->pbSWPing->setEnabled(false);
-    ui->tbSoftTriggerCtrl->setEnabled(false);
+
 
     m_camCtrl = new CameraCtrl();
     connect(m_camCtrl,SIGNAL(getCameraImage(cv::Mat&)),this,SLOT(getCameraImage(cv::Mat&)),Qt::DirectConnection);
-    connect(ui->comImageDPI,SIGNAL(currentIndexChanged(QString)),this,SLOT(onComDPIChanged(QString)));
+    connect(ui->comImageDPI,SIGNAL(currentIndexChanged(int)),this,SLOT(onComDPIChanged(int)));
     connect(ui->comImageType,SIGNAL(currentIndexChanged(int)),this,SLOT(onComImageTypeChanged(int)));
     connect(ui->comTriggerSelector,SIGNAL(currentIndexChanged(int)),this,SLOT(onComTriggerSelectorChanged(int)));
     connect(ui->comTriggerSource,SIGNAL(currentIndexChanged(int)),this,SLOT(onComTriggerSourceChanged(int)));
@@ -102,15 +99,14 @@ CameraCtlWidget::~CameraCtlWidget()
 
 void CameraCtlWidget::on_test_clicked()
 {
-    //m_wndParent->close();
-        myTimer->start(30);
+    m_wndParent->close();
 }
 
 void CameraCtlWidget::openCamera(unsigned long devID)
 {
     m_camCtrl->openCamera(devID);
     initial();
-
+    myTimer->start(40);
 }
 
 void CameraCtlWidget::closeCamera()
@@ -119,24 +115,22 @@ void CameraCtlWidget::closeCamera()
     myTimer->stop();
 }
 
-void CameraCtlWidget::ROIRectChanged(QRect &rect)
+void CameraCtlWidget::rectROIChanged(QRect &rect, bool flag)
 {
-    m_camCtrl->setROIOffsetX(rect.x());
-    m_camCtrl->setROIOffsetY(rect.y());
-    m_camCtrl->setROIWidth(rect.width());
-    m_camCtrl->setROIHeight(rect.height());
+//    m_camCtrl->setROIOffsetX(rect.x());
+//    m_camCtrl->setROIOffsetY(rect.y());
+//    m_camCtrl->setROIWidth(rect.width());
+//    m_camCtrl->setROIHeight(rect.height());
+    if(m_wROIDefine){
+        m_wROIDefine->changedROI(rect);
+    }
+    qDebug()<<"CameraCtlWidget"<<rect;
 }
 
 void CameraCtlWidget::getCameraImage(cv::Mat &image)
 {
-   // qDebug()<<"CameraCtlWidget::getCameraImage";
-    static int count = 10;
     myImage = Mat2QImage(image);
     m_curImage = QPixmap::fromImage(myImage);
-    if(count++ >= 10){
-        emit updatePic(m_curImage);
-        count = 0;
-    }
 }
 
 void CameraCtlWidget::SendData()
@@ -163,23 +157,31 @@ void CameraCtlWidget::SendData()
     out.device()->seek(0);
     out<<(quint64)(ba.size()-sizeof(quint64));
     tcpSocket->write(ba);
+    emit updatePic(m_curImage);
 }
 
-void CameraCtlWidget::onComDPIChanged(QString str)
+void CameraCtlWidget::onComDPIChanged(int index)
 {
-    qDebug()<<"onComDPIChanged"<<str;
-    QStringList list = str.split('*');
-    qDebug()<<((QString)list[0]).toInt()<<((QString)list[1]).toInt();
-    int width = ((QString)list[0]).toInt();
-    int height = ((QString)list[1]).toInt();
-    m_camCtrl->setROIWidth(width);
-    m_camCtrl->setROIHeight(height);
-    m_camCtrl->setROIOffsetX(640-width/2);
-    m_camCtrl->setROIOffsetY(512-height/2);
+    if(camClose == m_camCtrl->getCameraStatus())
+        return;
+    switch (index) {
+    case 0:
+        m_camCtrl->getCameraHandle()->SetDownsampling(XI_DWN_1x1);
+
+        break;
+    case 1:
+        m_camCtrl->getCameraHandle()->SetDownsampling(XI_DWN_2x2);
+        break;
+    default:
+        break;
+    }
+        updateFrameRateInfo();
 }
 
 void CameraCtlWidget::onComImageTypeChanged(int index)
 {
+    if(camClose == m_camCtrl->getCameraStatus())
+        return;
     qDebug()<<"onComImageTypeChanged"<<index;
     m_camCtrl->setImageFormat(index);
 }
@@ -193,10 +195,13 @@ void CameraCtlWidget::on_pbDefine_clicked()
           m_wROIDefine = nullptr;
       }else{
           m_wROIDefine = new ROIDefine(m_camCtrl,this);
-          connect(m_camCtrl,SIGNAL(rectROIChanged(QRect&,bool)),m_wROIDefine,SLOT(rectROIChanged(QRect&,bool)),Qt::DirectConnection);
+          connect(this,SIGNAL(ROIRectChanged(QRect&,bool)),this,SLOT(rectROIChanged(QRect&,bool)),Qt::DirectConnection);
+          connect(m_wROIDefine,SIGNAL(ROIRectChanged(QRect&)),this,SIGNAL(notifyWidgetAreaROI(QRect&)),Qt::DirectConnection);
+          connect(m_wROIDefine,SIGNAL(notifyParent(QRect,bool)),this,SLOT(onReceiveDefine(QRect,bool)));
           m_wROIDefine->setModal(false);
           m_wROIDefine->show();
       }
+      emit selectROI(/*m_camCtrl->getROIRect()*/QRect(0,0,320,256));
 }
 
 void CameraCtlWidget::on_pbROI_clicked()
@@ -204,7 +209,44 @@ void CameraCtlWidget::on_pbROI_clicked()
     static bool flag = false;
     flag = !flag;
     ui->pbROI->setChecked(flag);
-    emit selectROI(/*m_camCtrl->getROIRect()*/QRect(0,0,320,256));
+    if(flag){
+        if(ui->comImageDPI->currentIndex() == 0){
+            m_camCtrl->getCameraHandle()->SetOffsetX(0);
+            m_camCtrl->getCameraHandle()->SetOffsetY(0);
+            m_camCtrl->getCameraHandle()->SetWidth(1280);
+            m_camCtrl->getCameraHandle()->SetHeight(1024);
+        }
+        if(ui->comImageDPI->currentIndex() == 1){
+            m_camCtrl->getCameraHandle()->SetOffsetX(0);
+            m_camCtrl->getCameraHandle()->SetOffsetY(0);
+            m_camCtrl->getCameraHandle()->SetWidth(640);
+            m_camCtrl->getCameraHandle()->SetHeight(512);
+        }
+        m_camCtrl->getCameraHandle()->SetRegion_selector(0);
+    }else{
+        m_camCtrl->getCameraHandle()->SetOffsetX(rectROI.x());
+        m_camCtrl->getCameraHandle()->SetOffsetY(rectROI.y());
+        m_camCtrl->getCameraHandle()->SetWidth(rectROI.width());
+        m_camCtrl->getCameraHandle()->SetHeight(rectROI.height());
+    }
+}
+
+void CameraCtlWidget::on_pbSWPing_clicked()
+{
+    m_camCtrl->getCameraHandle()->SetTriggerSoftware(1);
+    myImage = Mat2QImage(m_camCtrl->getCameraHandle()->GetNextImageOcvMat());
+    m_curImage = QPixmap::fromImage(myImage);
+}
+
+void CameraCtlWidget::onReceiveDefine(QRect rect, bool bSave)
+{
+    m_wROIDefine->close();
+    delete m_wROIDefine;
+    m_wROIDefine = nullptr;
+    if(bSave){
+        rectROI = rect;
+    }
+    emit selectROI(rectROI);
 }
 
 void CameraCtlWidget::on_pbAutoExposureSetup_clicked()
@@ -216,8 +258,8 @@ void CameraCtlWidget::on_pbAutoExposureSetup_clicked()
 
 void CameraCtlWidget::on_pbDebounceSetup_clicked()
 {
-    m_wInputDebounceSetup = new InputDebounceSetup(this);
-    m_wInputDebounceSetup->setModal(false);
+    m_wInputDebounceSetup = new InputDebounceSetup(m_camCtrl, this);
+    m_wInputDebounceSetup->setModal(true);
     m_wInputDebounceSetup->show();
 }
 
@@ -225,18 +267,20 @@ void CameraCtlWidget::on_pbDebounceSetup_clicked()
 void CameraCtlWidget::onComTriggerSelectorChanged(int index)
 {
         qDebug()<<"onComTriggerSelectorChanged"<<index;
+
 }
 
 void CameraCtlWidget::onComTriggerSourceChanged(int index)
 {
     qDebug()<<"onComTriggerSourceChanged"<<index;
+    m_camCtrl->stopAcquistion();
     if(index == 3){
-        ui->tbSoftTriggerCtrl->setEnabled(true);
         ui->pbSWPing->setEnabled(true);
     }else{
-        ui->tbSoftTriggerCtrl->setEnabled(false);
         ui->pbSWPing->setEnabled(false);
     }
+    m_camCtrl->setTriggetSource(index);
+    m_camCtrl->getCameraHandle()->StartAcquisition();
 }
 
 void CameraCtlWidget::onEnableAutoExposure(bool flag)
@@ -275,11 +319,7 @@ void CameraCtlWidget::on_sliderExposure_valueChanged(int val)
         ui->leExposure->setText(QString::number(val));
         m_camCtrl->getCameraHandle()->SetExposureTime(val);
 
-        QString str = QString("max:%1   mini:%2").arg(m_camCtrl->getCameraHandle()->GetFrameRate_Minimum()).arg(
-                    m_camCtrl->getCameraHandle()->GetFrameRate_Maximum());
-        ui->lbFrame->setText(str);
-        float frame = m_camCtrl->getCameraHandle()->GetFrameRate();
-        ui->leFrameRate->setText(QString::number(frame));
+        updateFrameRateInfo();
 }
 
 void CameraCtlWidget::on_sliderGain_valueChanged(int val)
@@ -288,9 +328,7 @@ void CameraCtlWidget::on_sliderGain_valueChanged(int val)
         ui->leGain->setText(QString::number(val));
         m_camCtrl->getCameraHandle()->SetGain((float)val/10);
 
-        QString str = QString("max:%1   mini:%2").arg(m_camCtrl->getCameraHandle()->GetFrameRate_Minimum()).arg(
-                    m_camCtrl->getCameraHandle()->GetFrameRate_Maximum());
-        ui->lbFrame->setText(str);
+        updateFrameRateInfo();
 }
 
 void CameraCtlWidget::on_pbApply_clicked()
@@ -318,11 +356,17 @@ void CameraCtlWidget::initial()
     ui->sliderGain->setRange(cam->GetGain_Minimum()*10,cam->GetGain_Maximum()*10);
     ui->sliderGain->setSingleStep(cam->GetGain_Increment()*10);
 
-    ui->leFrameRate->setText(QString::number(cam->GetFrameRate()));
-    QString str = QString("max:%1   mini:%2").arg(cam->GetFrameRate_Minimum()).arg(
-                cam->GetFrameRate_Maximum());
-    ui->lbFrame->setText(str);
+    updateFrameRateInfo();
 
+}
+
+void CameraCtlWidget::updateFrameRateInfo()
+{
+    QString str = QString("mini:%1   max:%2").arg((int)m_camCtrl->getCameraHandle()->GetFrameRate_Minimum()+1).arg(
+                (int)m_camCtrl->getCameraHandle()->GetFrameRate_Maximum());
+    ui->lbFrame->setText(str);
+    float frame = m_camCtrl->getCameraHandle()->GetFrameRate();
+    ui->leFrameRate->setText(QString::number(frame));
 }
 
 QImage CameraCtlWidget::Mat2QImage(cv::Mat& cvImg)
@@ -349,6 +393,7 @@ QImage CameraCtlWidget::Mat2QImage(cv::Mat& cvImg)
     }
     return qImg;
 }
+
 
 
 

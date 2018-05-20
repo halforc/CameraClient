@@ -43,12 +43,12 @@ void AcquisitionThread::getImage()
     }
     while(true){
         //qDebug()<<"status"<<m_status;
-        if(m_xiCam->IsAcquisitionActive()){
+        if(m_status == camOnAsquistion){
             {
                 QMutexLocker locker(&mutex);
                 if(!mStart)
                     return;
-
+                qDebug()<<"trigger source:"<<(int)m_xiCam->GetTriggerSource();
                 format = m_xiCam->GetImageDataFormat();
                 cv_mat_image = m_xiCam->GetNextImageOcvMat();
             }

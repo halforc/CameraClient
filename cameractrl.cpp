@@ -48,13 +48,14 @@ bool CameraCtrl::openCamera(unsigned long devID)
     }
     m_devInfo.curDevID = devID;
     m_xiCam.OpenByID(devID);
-   // m_xiCam.SetExposureTime(10000);
+    m_xiCam.SetExposureTime(1000);
     m_xiCam.SetAcquisitionTimingMode(XI_ACQ_TIMING_MODE_FRAME_RATE);//设置帧率模式
     m_xiCam.SetRegion_selector(0); // default is 0
     m_xiCam.SetWidth(640);
     m_xiCam.SetHeight(512);
     m_xiCam.SetFrameRate(400.0f);
     m_xiCam.SetExposureTime(1000);
+    qDebug()<<"***trigger source:"<<(int)m_xiCam.GetTriggerSource();
     //开启采集线程
     if(!m_objThread)
     {
@@ -91,6 +92,11 @@ QRect CameraCtrl::getROIRect()
                        QSize(m_xiCam.GetWidth(),m_xiCam.GetHeight()));
     }
     return rect;
+}
+
+CAMSTATUS CameraCtrl::getCameraStatus()
+{
+    return m_camStatus;
 }
 
 int CameraCtrl::setROIOffsetX(int offsetX)
@@ -157,7 +163,12 @@ bool CameraCtrl::setImageFormat(int index)
 
 void CameraCtrl::setTriggetSource(int index)
 {
-    m_xiCam.SetTriggerSource(index);
+    m_xiCam.SetTriggerSource(m_triggerSource[index]);
+}
+
+void CameraCtrl::setTriggetSelector(int index)
+{
+
 }
 
 
@@ -198,6 +209,31 @@ void CameraCtrl::writeDevParaToXML(xiAPIplusCameraOcv &cam)
 
 }
 
+void CameraCtrl::startAcquistion()
+{
+    //开启采集线程
+    if(!m_objThread)
+    {
+        startObjThread();
+    }
+    m_camStatus = camOnAsquistion;
+    emit startAcquistionWork();
+}
+
+void CameraCtrl::stopAcquistion()
+{
+    if(m_objThread)
+    {
+        if(m_acqThread)
+        {
+            m_acqThread->stop();
+        }
+    }
+    if(m_xiCam.IsAcquisitionActive()){
+        m_xiCam.StopAcquisition();
+    }
+}
+
 void CameraCtrl::initialCamera()
 {
     m_nDevNumber = m_xiCam.GetNumberOfConnectedCameras();
@@ -214,7 +250,7 @@ void CameraCtrl::recROIChanged(QRect &rect, bool modifyCam)
 //    setROIOffsetY(rect.y());
 //    setROIWidth(rect.width());
 //    setROIHeight(rect.height());
-    qDebug()<<"********CamCtrl roi rect"<<rect;
+//    qDebug()<<"********CamCtrl roi rect"<<rect;
 }
 
 void CameraCtrl::getCameraPara()

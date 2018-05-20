@@ -16,7 +16,8 @@ MainDlg::MainDlg(QWidget *parent) :
     camCtrl = new CameraCtlWidget(this);
     //显示区
     picArea = new Widget(camCtrl->m_camCtrl,this);
-    connect(camCtrl->m_camCtrl,SIGNAL(rectROIChanged(QRect&,bool)),picArea,SLOT(rectROIChanged(QRect&,bool)),Qt::DirectConnection);
+    connect(picArea,SIGNAL(ROIRectChanged(QRect&,bool)),camCtrl,SIGNAL(ROIRectChanged(QRect&,bool)),Qt::DirectConnection);
+    connect(camCtrl,SIGNAL(notifyWidgetAreaROI(QRect&)),picArea,SLOT(rectROIChanged(QRect&)),Qt::DirectConnection);
     //进度条
     slider = new QSlider(Qt::Horizontal, this);
     labelDuration = new QLabel("framerate",this);
@@ -65,7 +66,7 @@ MainDlg::MainDlg(QWidget *parent) :
     listFileWidget->hide();
 
     connect(this,SIGNAL(initialCamera()),camCtrl->m_camCtrl,SLOT(initialCamera()));
-    //emit initialCamera();
+    emit initialCamera();
 }
 
 

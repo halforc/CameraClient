@@ -2,6 +2,7 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QDebug>
+#include <QPolygon>
 #define FRAME_SIZE 32
 
 Widget::Widget(CameraCtrl* camCtrl, QWidget *parent) :
@@ -15,7 +16,6 @@ Widget::Widget(CameraCtrl* camCtrl, QWidget *parent) :
     this->setMouseTracking(true);
     this->setAttribute(Qt::WA_TranslucentBackground);
     this->setFixedSize(640+FRAME_SIZE * 2,512+FRAME_SIZE * 2);//+60
-   // createContentMenu();
 }
 
 Widget::~Widget()
@@ -56,18 +56,20 @@ void Widget::mouseReleaseEvent(QMouseEvent * event)
         endPoint = event->pos();
         ptTopLeft.setX((ptTopLeft.x() + 8)/16 * 16);
         ptTopLeft.setY((ptTopLeft.y() + 1)/2 * 2);
-        int w = ptBottomRight.x() - ptTopLeft.x();
-        int h = ptBottomRight.y() - ptTopLeft.y();
+        int w = roiSize.width();
+        int h = roiSize.height();
         w = (w + 8)/16 * 16;
         h = (h + 1)/2*2;
         ptBottomRight.setX(ptTopLeft.x()+w);
         ptBottomRight.setY(ptTopLeft.y()+h);
-        update(FRAME_SIZE,FRAME_SIZE,640,512);
+        roiSize.setWidth(w);
+        roiSize.setHeight(h);
+        update();
         event->accept();
         m_iChangeSizeFlag = -1;
         qDebug()<<"release";
         updateRectsInfo();
-        emit m_camCtrl->rectROIChanged(QRect(ptTopLeft,ptBottomRight),true);
+        emit ROIRectChanged(QRect(ptTopLeft-QPoint(FRAME_SIZE,FRAME_SIZE),roiSize),true);
       }
 }
 
@@ -111,10 +113,11 @@ void Widget::mouseMoveEvent(QMouseEvent * event){
                 ptTopLeft = ptTopLeft + endPoint-lastPoint;
                 ptBottomRight = ptBottomRight + endPoint-lastPoint;
             }
-            qDebug()<<"point:"<<ptTopLeft;
+           // qDebug()<<"point:"<<ptTopLeft;
             lastPoint = endPoint;
-            qDebug()<<"move" << ptTopLeft;
+           // qDebug()<<"move" << ptTopLeft;
             recPath.translate(endPoint-lastPoint);
+            emit ROIRectChanged(QRect(ptTopLeft,roiSize),false);
             break;
         case 1:
             if(endPoint.x() >= rect.topLeft().x() && endPoint.x() <= ptBottomRight.x() - 160&&
@@ -145,25 +148,28 @@ void Widget::mouseMoveEvent(QMouseEvent * event){
         default:
             break;
         }
-        emit m_camCtrl->rectROIChanged(QRect(ptTopLeft,ptBottomRight),false);
+        if(m_iChangeSizeFlag != 0){
+            emit ROIRectChanged(QRect(ptTopLeft-QPoint(FRAME_SIZE,FRAME_SIZE),ptBottomRight),false);
+            roiSize = QSize(QRect(ptTopLeft,ptBottomRight).size());
+        }
+
         update(FRAME_SIZE,FRAME_SIZE,640,512);
         event->accept();
     }
 }
 
-void Widget::paintEvent(QPaintEvent *){
+void Widget::paintEvent(QPaintEvent *event){
     QPainter p(this);
 
     p.fillRect(rect(), QColor(255,255,255,150));
     p.drawPixmap(FRAME_SIZE,FRAME_SIZE,640,512,m_curPic);
     if(m_bROIFlag){
         p.setPen(QPen(QColor("#ff0000"), 1, Qt::SolidLine));
-        QRect rectROI = QRect(ptTopLeft,ptBottomRight);
-        QRect rect(FRAME_SIZE,FRAME_SIZE,640,512);
-        if (!rect.contains(rectROI)){
-            qDebug()<<"not contains";
-
-        }
+//        QRect rectROI = QRect(ptTopLeft,ptBottomRight);
+//        QRect rect(FRAME_SIZE,FRAME_SIZE,640,512);
+//        if (!rect.contains(rectROI)){
+//            qDebug()<<"not contains";
+//        }
         p.drawRect(QRect(ptTopLeft,ptBottomRight));
     }
     drawXLine();
@@ -187,8 +193,10 @@ void Widget::drawXLine(){
     int mid = this->width() / 2;
     QFont font(QFont("Arial", 8, QFont::Bold));
     p.setFont(font);
-    p.drawText(mid - 3, 0, 25, 12, Qt::AlignLeft, QString::number(0));
+    p.drawText(mid - 3, 0, 25, 12, Qt::AlignLeft, QString::number(0)+"°");
     p.drawLine(QPoint(mid, FRAME_SIZE), QPoint(mid, FRAME_SIZE-lineHeight));
+
+    p.drawText(mid - 3, 0 + 512 + 50, 25, 12, Qt::AlignLeft, QString::number(0)+"°");
 
     p.drawLine(QPoint(mid, this->height()-FRAME_SIZE), QPoint(mid, this->height()-FRAME_SIZE+lineHeight));
     for (int i = 0; mid - i > 0; i+=10) {
@@ -202,11 +210,16 @@ void Widget::drawXLine(){
         }
         if (i % 50 == 0) {
             p.setFont(QFont("Arial", 8, QFont::Bold));
-            str = QString::number(i);
+            str = QString::number(i/10);
             p.drawText( mid - i -3 * str.length(),
-                        0, 25, 12, Qt::AlignLeft, str);
+                        0, 25, 12, Qt::AlignLeft, "-"+str+"°");
             p.drawText( mid + i -3 * str.length(),
-                        0, 25, 12, Qt::AlignLeft, str);
+                        0, 25, 12, Qt::AlignLeft, str+"°");
+
+            p.drawText( mid - i -3 * str.length(),
+                        0 + 512+ 50, 25, 12, Qt::AlignLeft, "-"+str+"°");
+            p.drawText( mid + i -3 * str.length(),
+                        0 +512 + 50, 25, 12, Qt::AlignLeft, str+"°");
             lineHeight = 15;
         }
         p.drawLine(QPoint(mid - i, FRAME_SIZE), QPoint(mid - i, FRAME_SIZE-lineHeight));
@@ -214,7 +227,24 @@ void Widget::drawXLine(){
 
         p.drawLine(QPoint(mid - i, this->height() - FRAME_SIZE), QPoint(mid - i, this->height() - FRAME_SIZE+lineHeight));
         p.drawLine(QPoint(mid + i, this->height() - FRAME_SIZE), QPoint(mid + i, this->height() - FRAME_SIZE+lineHeight));
+        p.drawLine(QPoint(mid - i, this->height() - FRAME_SIZE + 512), QPoint(mid - i, this->height() - FRAME_SIZE+lineHeight+ 512));
+        p.drawLine(QPoint(mid + i, this->height() - FRAME_SIZE+ 512), QPoint(mid + i, this->height() - FRAME_SIZE+lineHeight+ 512));
     }
+
+    QPolygon polygon1,polygon2;
+    polygon1 << QPoint(mid, FRAME_SIZE);
+    polygon1 << QPoint(mid-6, FRAME_SIZE-10);
+    polygon1 << QPoint(mid+6, FRAME_SIZE-10);
+    polygon2 << QPoint(mid, FRAME_SIZE+512);
+    polygon2 << QPoint(mid-6, FRAME_SIZE+10+512);
+    polygon2 << QPoint(mid+6, FRAME_SIZE+10+512);
+    p.setBrush(Qt::red);
+    p.drawConvexPolygon(polygon1);
+    p.drawConvexPolygon(polygon2);
+
+    p.setPen(QPen(QColor("#FFFFFF"), 1, Qt::SolidLine));
+    p.drawLine(QPoint(width()/2-15,height()/2),QPoint(width()/2+15,height()/2));
+    p.drawLine(QPoint(width()/2,height()/2-15),QPoint(width()/2,height()/2+15));
 }
 
 void Widget::drawYLine(){
@@ -227,8 +257,10 @@ void Widget::drawYLine(){
     int mid = this->height() / 2;
     QFont font(QFont("Arial", 8, QFont::Bold));
     p.setFont(font);
-    p.drawText(0, mid - 7, 25, 12, Qt::AlignLeft, QString::number(0));
+    p.drawText(2, mid - 7, 25, 12, Qt::AlignLeft, QString::number(0)+"°");
     p.drawLine(QPoint(FRAME_SIZE,  mid), QPoint(FRAME_SIZE-lineHeight, mid));
+
+    p.drawText(640 + 2 + 50, mid - 7, 25, 12, Qt::AlignLeft, QString::number(0)+"°");
 
     p.drawLine(QPoint(this->width()-FRAME_SIZE,  mid), QPoint(this->width()-FRAME_SIZE+lineHeight, mid));
     for (int i = 0; mid - i > 0; i+=10) {
@@ -242,8 +274,11 @@ void Widget::drawYLine(){
         }
 
         if (i % 50 == 0 && i>0) {
-            p.drawText(0, mid-i-7, 25, 12, Qt::AlignLeft, QString::number(i));
-             p.drawText(0, mid+i-7, 25, 12, Qt::AlignLeft, QString::number(i));
+            p.drawText(2, mid-i-7, 25, 12, Qt::AlignLeft, "-"+QString::number(i/10)+"°");
+             p.drawText(2, mid+i-7, 25, 12, Qt::AlignLeft, QString::number(i/10)+"°");
+
+             p.drawText(2+ 640 + 45, mid-i-7, 25 , 12, Qt::AlignLeft, "-"+QString::number(i/10)+"°");
+              p.drawText(2+ 640 + 45, mid+i-7, 25, 12, Qt::AlignLeft, QString::number(i/10)+"°");
             lineHeight = 15;
         }
 
@@ -252,7 +287,20 @@ void Widget::drawYLine(){
 
         p.drawLine(QPoint(this->width()-FRAME_SIZE,  mid - i), QPoint(this->width()-FRAME_SIZE+lineHeight, mid - i));
         p.drawLine(QPoint(this->width()-FRAME_SIZE,  mid + i), QPoint(this->width()-FRAME_SIZE+lineHeight, mid + i));
+        p.drawLine(QPoint(this->width()-FRAME_SIZE+ 640,  mid - i), QPoint(this->width()-FRAME_SIZE+lineHeight+ 640, mid - i));
+        p.drawLine(QPoint(this->width()-FRAME_SIZE+ 640,  mid + i), QPoint(this->width()-FRAME_SIZE+lineHeight+ 640, mid + i));
     }
+
+    QPolygon polygon1,polygon2;
+    polygon1 << QPoint(FRAME_SIZE,mid);
+    polygon1 << QPoint(FRAME_SIZE-10,mid-6);
+    polygon1 << QPoint(FRAME_SIZE-10,mid+6);
+    polygon2 << QPoint(FRAME_SIZE+640,mid);
+    polygon2 << QPoint(FRAME_SIZE+10+640,mid-6);
+    polygon2 << QPoint(FRAME_SIZE+10+640,mid+6);
+    p.setBrush(Qt::red);
+    p.drawConvexPolygon(polygon1);
+    p.drawConvexPolygon(polygon2);
 }
 
 
@@ -269,9 +317,9 @@ void Widget::selectROI(QRect& rect)
 {
     m_bROIFlag = !m_bROIFlag;
     if(m_bROIFlag){
-        ptTopLeft = QPoint(50,50);
-        ptBottomRight = QPoint(370,306);
-        roiSize = QSize(320,256);
+        ptTopLeft = rect.topLeft() + QPoint(FRAME_SIZE,FRAME_SIZE);
+        ptBottomRight = rect.bottomRight() + QPoint(FRAME_SIZE,FRAME_SIZE);
+        roiSize = rect.size();
         updateRectsInfo();
         recPath.addRect(recTopLeft);
         recPath.addRect(recTopRight);
@@ -279,13 +327,14 @@ void Widget::selectROI(QRect& rect)
         recPath.addRect(recBottomRight);
         qDebug()<<"selectROI****"<<rect;
     }
-    update(FRAME_SIZE,FRAME_SIZE,640,512);
+    update();
 }
 
-void Widget::rectROIChanged(QRect& rect,bool modifyCam)
+void Widget::rectROIChanged(QRect& rect)
 {
     ptTopLeft = rect.topLeft();
     ptBottomRight = rect.bottomRight();
-    update(FRAME_SIZE,FRAME_SIZE,640,512);
+    roiSize = rect.size();
+    update();
     qDebug()<<"widget changed" << rect;
 }

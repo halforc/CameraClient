@@ -36,6 +36,7 @@ private:
     DEVICE_INFO m_devInfo;
 
     QPixmap m_curPic;
+    QRect rectROI;
 
     int m_width;
     int m_hight;
@@ -52,6 +53,8 @@ public:
     bool openCamera(unsigned long devID);
     void closeCamera();
     QRect getROIRect();
+
+    CAMSTATUS getCameraStatus();
     int setROIOffsetX(int offsetX);
     int setROIOffsetY(int offsetY);
     int setROIWidth(int width);
@@ -62,11 +65,14 @@ public:
 
     bool setImageFormat(int index);
     void setTriggetSource(int index);
-
+    void setTriggetSelector(int index);
     void startObjThread();
 
     bool readDevParaFromXML(DEVICE_INFO *pDevInfo);
     void writeDevParaToXML(xiAPIplusCameraOcv &cam);
+
+    void startAcquistion();
+    void stopAcquistion();
 signals:
     void startAcquistionWork();
     void getCameraImage(cv::Mat& image);

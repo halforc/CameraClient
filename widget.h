@@ -56,7 +56,7 @@ private:
 public slots:
     void selectROI(QRect& rect);
 
-    void rectROIChanged(QRect& rect,bool modifyCam);
+    void rectROIChanged(QRect& rect);
 
 signals:
     void ROIRectChanged(QRect& rect,bool modifyCam);
